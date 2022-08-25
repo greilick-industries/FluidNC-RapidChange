@@ -3,6 +3,7 @@
 #include "../Settings.h"
 #include "../Uart.h"
 #include "../WebUI/InputBuffer.h"
+#include <stdarg.h>
 
 void gc_exec_linef(const char* format, ...);
 
