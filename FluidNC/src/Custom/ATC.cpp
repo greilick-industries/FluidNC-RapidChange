@@ -13,12 +13,12 @@ void user_tool_change(uint8_t new_tool) {
         gc_exec_linef("G58");
         gc_exec_linef("g1z4f100");
         gc_exec_linef("x0y0");
-        gc_exec_linef("Z2");
+        gc_exec_linef("Z3.5");
         gc_exec_linef("G54");
         gc_exec_linef("s8000m3");
-        gc_exec_linef("g38.2f15z1.5");
-        gc_exec_linef("g0g91z-.05");
-        gc_exec_linef("g38.2f1z.2");
+        gc_exec_linef("g38.2f15z-1.5");
+        gc_exec_linef("g0g91z.1");
+        gc_exec_linef("g38.2f1z-.2");
         gc_exec_linef("g10l20p0z2.497");
         gc_exec_linef("M5");
         gc_exec_linef("g0g90z3");
