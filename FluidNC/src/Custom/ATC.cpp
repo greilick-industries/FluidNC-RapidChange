@@ -62,10 +62,17 @@ void user_tool_change(uint8_t new_tool) {
 }
 
 void convert_sys_mpos_to_array(float (&array_to_fill)[MAX_N_AXIS]) {
-    float* sys_mpos = get_mpos();
+    float* sys_mpos {};
+    try {
+        sys_mpos = get_mpos();
+    }
+    catch(...) {
+        log_info("get_mpos() failed.");
+    }
+    
     try {
         for (uint8_t i = 0; i < sizeof(array_to_fill); i++) {
-            array_to_fill[i] = sys_mpos[i];
+            array_to_fill[i] = *(sys_mpos + i);
         }
         
     }
