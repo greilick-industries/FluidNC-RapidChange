@@ -1,41 +1,75 @@
 #include "../GCode.h"
+#include "../Protocol.h"
 #include "../Serial.h"
 #include "../Settings.h"
+#include "../Spindles/Spindle.h"
 #include "../Uart.h"
 #include "../WebUI/InputBuffer.h"
 #include <stdarg.h>
 
-void gc_exec_linef(const char* format, ...);
+const uint8_t TOOL_COUNT = 5;
+uint8_t current_tool = 0;
+
+void convert_sys_mpos_to_array(float (&array_to_fill)[MAX_N_AXIS]);
+void gc_exec_linef(bool sync_after, const char* format, ...);
+
+
+void machine_init() {
+
+}
 
 void user_tool_change(uint8_t new_tool) {
-    if (new_tool == 1) {
-        gc_exec_linef("G20G90");
-        gc_exec_linef("G58");
-        gc_exec_linef("g1z4f100");
-        gc_exec_linef("x0y0");
-        gc_exec_linef("Z.1");
-        gc_exec_linef("S400M4");
-        gc_exec_linef("M5");
-        gc_exec_linef("g4p1");
-        gc_exec_linef("s3000m3");
-        gc_exec_linef("g4p.2");
-        gc_exec_linef("z.25f20");
-        gc_exec_linef("G0Z3.5");
-        gc_exec_linef("G54");
-        gc_exec_linef("s8000m3");
-        gc_exec_linef("g38.2f15z-1.5");
-        gc_exec_linef("g0g91z.15");
-        gc_exec_linef("g38.2f1z-.2");
-        gc_exec_linef("g10l20p0z2.492");
-        gc_exec_linef("M5");
-        gc_exec_linef("g0g90z3");
+    bool spindle_was_on = false;
+    bool was_incremental = false;
+    uint64_t spindle_spin_delay;
+    float saved_mpos[MAX_N_AXIS] = {};
+
+    // if (new_tool == current_tool) {
+    //     // TODO log
+    //     return;
+    // }
+
+    // if (new_tool > TOOL_COUNT) {
+    //     // TODO log
+    //     return;
+    // }
+
+    protocol_buffer_synchronize();
+    convert_sys_mpos_to_array(saved_mpos);
+
+    char coords[30];
+    sprintf(coords, "X: %0.3f Y: %0.3f Z: %0.3f", saved_mpos[X_AXIS], saved_mpos[Y_AXIS], saved_mpos[Z_AXIS]);
+
+    log_info(coords);
+
+    // if (gc_state.modal.distance == Distance::Incremental) {
+    //     was_incremental = true;
+    //     gc_exec_linef(false, "G90");
+    // }
+
+    // if (gc_state.modal.spindle != SpindleState::Disable) {
+    //     spindle_was_on = true;
+    //     gc_exec_linef(false, "M5");
+    //     spindle_spin_delay = esp_timer_get_time() + (spindle->_spindown_ms * 1000);
+
+    //     uint64_t current_time = esp_timer_get_time();
+    //     if (current_time < spindle_spin_delay) {
+    //         vTaskDelay(spindle_spin_delay - current_time);
+    //     }
+    // }
     
-        log_info("Tool change completed");
+    
+}
+
+void convert_sys_mpos_to_array(float (&array_to_fill)[MAX_N_AXIS]) {
+    float* sys_mpos = get_mpos();
+    for (uint8_t i; i < sizeof(array_to_fill); i++) {
+        array_to_fill[i] = sys_mpos[i];
     }
 }
 
 // This comment is even newer
-void gc_exec_linef(const char* format, ...) {
+void gc_exec_linef(bool sync_after, const char* format, ...) {
     Channel& r_channel = WebUI::inputBuffer;
     va_list args;
     char gc_line[20];
