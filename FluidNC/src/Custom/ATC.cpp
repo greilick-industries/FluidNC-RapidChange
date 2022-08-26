@@ -10,7 +10,7 @@
 const uint8_t TOOL_COUNT = 5;
 uint8_t current_tool = 0;
 
-void convert_sys_mpos_to_array(float (&array_to_fill)[MAX_N_AXIS]);
+void convert_sys_mpos_to_array(float array_to_fill[MAX_N_AXIS]);
 void gc_exec_linef(bool sync_after, const char* format, ...);
 bool return_tool(uint8_t tool_num);
 
@@ -42,6 +42,7 @@ void user_tool_change(uint8_t new_tool) {
     }
     catch(...) {
         log_info("Could not read saved_mpos");
+        return;
     }
 
     // if (gc_state.modal.distance == Distance::Incremental) {
@@ -61,23 +62,25 @@ void user_tool_change(uint8_t new_tool) {
     // }
 }
 
-void convert_sys_mpos_to_array(float (&array_to_fill)[MAX_N_AXIS]) {
-    float* sys_mpos {};
+void convert_sys_mpos_to_array(float array_to_fill[MAX_N_AXIS]) {
+    float* sys_mpos;
     try {
         sys_mpos = get_mpos();
     }
     catch(...) {
         log_info("get_mpos() failed.");
+        return;
     }
     
     try {
-        for (uint8_t i = 0; i < sizeof(array_to_fill); i++) {
+        for (uint8_t i = 0; i < MAX_N_AXIS; i++) {
             array_to_fill[i] = *(sys_mpos + i);
         }
         
     }
     catch(...) {
         log_info("Copying array failed.");
+        return;
     }
     
 }
