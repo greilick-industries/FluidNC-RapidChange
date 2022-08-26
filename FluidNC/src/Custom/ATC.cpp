@@ -18,18 +18,6 @@ void machine_init() {
 
 }
 
-void test_array_conversion(float (&array_to_fill)[MAX_N_AXIS]) {
-        try {
-            char coords[30];
-            sprintf(coords, "X: %0.3f Y: %0.3f Z: %0.3f", array_to_fill[X_AXIS], array_to_fill[Y_AXIS], array_to_fill[Z_AXIS]);
-
-            log_info(coords);
-        }
-        catch(...) {
-            log_info("Something went wrong");
-        }
-    }
-
 void user_tool_change(uint8_t new_tool) {
     bool spindle_was_on = false;
     bool was_incremental = false;
@@ -47,11 +35,14 @@ void user_tool_change(uint8_t new_tool) {
     // }
 
     // protocol_buffer_synchronize();
+    
     convert_sys_mpos_to_array(saved_mpos);
-    test_array_conversion(saved_mpos);
-    
-
-    
+    try {
+        log_info("X:" << saved_mpos[X_AXIS] << " Y:" << saved_mpos[Y_AXIS] << " Z:" << saved_mpos[Z_AXIS]);
+    }
+    catch(...) {
+        log_info("Could not read saved_mpos");
+    }
 
     // if (gc_state.modal.distance == Distance::Incremental) {
     //     was_incremental = true;
@@ -68,15 +59,20 @@ void user_tool_change(uint8_t new_tool) {
     //         vTaskDelay(spindle_spin_delay - current_time);
     //     }
     // }
-    
-    
 }
 
 void convert_sys_mpos_to_array(float (&array_to_fill)[MAX_N_AXIS]) {
     float* sys_mpos = get_mpos();
-    for (uint8_t i = 0; i < sizeof(array_to_fill); i++) {
-        array_to_fill[i] = sys_mpos[i];
+    try {
+        for (uint8_t i = 0; i < sizeof(array_to_fill); i++) {
+            array_to_fill[i] = sys_mpos[i];
+        }
+        
     }
+    catch(...) {
+        log_info("Copying array failed.");
+    }
+    
 }
 
 // This comment is even newer
