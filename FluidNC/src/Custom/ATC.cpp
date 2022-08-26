@@ -12,11 +12,23 @@ uint8_t current_tool = 0;
 
 void convert_sys_mpos_to_array(float (&array_to_fill)[MAX_N_AXIS]);
 void gc_exec_linef(bool sync_after, const char* format, ...);
-
+bool return_tool(uint8_t tool_num);
 
 void machine_init() {
 
 }
+
+void test_array_conversion(float (&array_to_fill)[MAX_N_AXIS]) {
+        try {
+            char coords[30];
+            sprintf(coords, "X: %0.3f Y: %0.3f Z: %0.3f", array_to_fill[X_AXIS], array_to_fill[Y_AXIS], array_to_fill[Z_AXIS]);
+
+            log_info(coords);
+        }
+        catch(...) {
+            log_info("Something went wrong");
+        }
+    }
 
 void user_tool_change(uint8_t new_tool) {
     bool spindle_was_on = false;
@@ -34,13 +46,12 @@ void user_tool_change(uint8_t new_tool) {
     //     return;
     // }
 
-    protocol_buffer_synchronize();
+    // protocol_buffer_synchronize();
     convert_sys_mpos_to_array(saved_mpos);
 
-    char coords[30];
-    sprintf(coords, "X: %0.3f Y: %0.3f Z: %0.3f", saved_mpos[X_AXIS], saved_mpos[Y_AXIS], saved_mpos[Z_AXIS]);
+    
 
-    log_info(coords);
+    
 
     // if (gc_state.modal.distance == Distance::Incremental) {
     //     was_incremental = true;
@@ -78,4 +89,11 @@ void gc_exec_linef(bool sync_after, const char* format, ...) {
     Error line_executed = execute_line(gc_line, r_channel, WebUI::AuthenticationLevel::LEVEL_GUEST);
     r_channel << ">" << gc_line << ":";
     report_status_message(line_executed, r_channel);
+}
+
+bool return_tool(uint8_t tool_num) {
+    if (tool_num == 0) {
+        return false;
+    }
+    return true;
 }
