@@ -37,52 +37,29 @@ void user_tool_change(uint8_t new_tool) {
     // protocol_buffer_synchronize();
     
     convert_sys_mpos_to_array(saved_mpos);
-    try {
-        log_info("X:" << saved_mpos[X_AXIS] << " Y:" << saved_mpos[Y_AXIS] << " Z:" << saved_mpos[Z_AXIS]);
-    }
-    catch(...) {
-        log_info("Could not read saved_mpos");
-        return;
-    }
 
     // if (gc_state.modal.distance == Distance::Incremental) {
     //     was_incremental = true;
     //     gc_exec_linef(false, "G90");
     // }
 
-    // if (gc_state.modal.spindle != SpindleState::Disable) {
-    //     spindle_was_on = true;
-    //     gc_exec_linef(false, "M5");
-    //     spindle_spin_delay = esp_timer_get_time() + (spindle->_spindown_ms * 1000);
+    if (gc_state.modal.spindle != SpindleState::Disable) {
+        spindle_was_on = true;
+        gc_exec_linef(false, "M5");
+        spindle_spin_delay = esp_timer_get_time() + (spindle->_spindown_ms * 1000);
 
-    //     uint64_t current_time = esp_timer_get_time();
-    //     if (current_time < spindle_spin_delay) {
-    //         vTaskDelay(spindle_spin_delay - current_time);
-    //     }
-    // }
+        uint64_t current_time = esp_timer_get_time();
+        if (current_time < spindle_spin_delay) {
+            vTaskDelay(spindle_spin_delay - current_time);
+        }
+    }
 }
 
 void convert_sys_mpos_to_array(float array_to_fill[MAX_N_AXIS]) {
-    float* sys_mpos;
-    try {
-        sys_mpos = get_mpos();
+    float* sys_mpos = get_mpos();
+    for (uint8_t i = 0; i < MAX_N_AXIS; i++) {
+        array_to_fill[i] = *(sys_mpos + i);
     }
-    catch(...) {
-        log_info("get_mpos() failed.");
-        return;
-    }
-    
-    try {
-        for (uint8_t i = 0; i < MAX_N_AXIS; i++) {
-            array_to_fill[i] = *(sys_mpos + i);
-        }
-        
-    }
-    catch(...) {
-        log_info("Copying array failed.");
-        return;
-    }
-    
 }
 
 // This comment is even newer
