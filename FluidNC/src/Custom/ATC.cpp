@@ -48,7 +48,7 @@ void user_tool_change(uint8_t new_tool) {
 
     // protocol_buffer_synchronize();
     convert_sys_mpos_to_array(saved_mpos);
-
+    test_array_conversion(saved_mpos);
     
 
     
