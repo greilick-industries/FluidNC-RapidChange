@@ -63,7 +63,7 @@ void user_tool_change(uint8_t new_tool) {
 
 void convert_sys_mpos_to_array(float (&array_to_fill)[MAX_N_AXIS]) {
     float* sys_mpos = get_mpos();
-    for (uint8_t i; i < sizeof(array_to_fill); i++) {
+    for (uint8_t i = 0; i < sizeof(array_to_fill); i++) {
         array_to_fill[i] = sys_mpos[i];
     }
 }
