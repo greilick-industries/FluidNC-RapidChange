@@ -18,18 +18,16 @@ void machine_init() {
 
 }
 
-
-
 void user_tool_change(uint8_t new_tool) {
     // bool spindle_was_on = false;
     // bool was_incremental = false;
     // uint64_t spindle_spin_delay;
     // float saved_mpos[MAX_N_AXIS] = {};
 
-    // if (new_tool == current_tool) {
-    //     log_info("Existing tool requested.");
-    //     return;
-    // }
+    if (new_tool == current_tool) {
+        log_info("Existing tool requested.");
+        return;
+    }
 
     // if (new_tool > TOOL_COUNT) {
     //     log_info("Tool requested is out of range.");
@@ -57,9 +55,6 @@ void user_tool_change(uint8_t new_tool) {
     //     //     vTaskDelay(spindle_spin_delay - current_time);
     //     // }
     // }
-    Error test_error = Error::InvalidValue;
-    report_status_message(test_error, allChannels);
-    gc_exec_linef(false, "G95");
 }
 
 void convert_sys_mpos_to_array(float array_to_fill[MAX_N_AXIS]) {
