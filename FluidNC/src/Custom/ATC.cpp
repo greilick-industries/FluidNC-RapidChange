@@ -25,10 +25,12 @@ void user_tool_change(uint8_t new_tool) {
     // float saved_mpos[MAX_N_AXIS] = {};
 
     if (new_tool == current_tool) {
-        current_tool = new_tool;
+        
         log_info("Existing tool requested.");
         return;
     }
+
+    current_tool = new_tool;
 
     if (new_tool > TOOL_COUNT) {
         Error tool_number_error = Error::InvalidValue;
