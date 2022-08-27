@@ -59,6 +59,7 @@ void user_tool_change(uint8_t new_tool) {
     // }
     Error test_error = Error::InvalidValue;
     report_status_message(test_error, allChannels);
+    gc_exec_linef(false, "G95");
 }
 
 void convert_sys_mpos_to_array(float array_to_fill[MAX_N_AXIS]) {
@@ -76,7 +77,7 @@ void gc_exec_linef(bool sync_after, const char* format, ...) {
     gc_line[strlen(format)] = '\r';
     sprintf(gc_line, format, args);
     Error line_executed = execute_line(gc_line, allChannels, WebUI::AuthenticationLevel::LEVEL_GUEST);
-    Uart0 << ">" << gc_line << ":";
+    // Uart0 << ">" << gc_line << ":";
     report_status_message(line_executed, allChannels);
 }
 
