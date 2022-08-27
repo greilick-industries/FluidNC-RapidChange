@@ -25,14 +25,17 @@ void user_tool_change(uint8_t new_tool) {
     // float saved_mpos[MAX_N_AXIS] = {};
 
     if (new_tool == current_tool) {
+        current_tool = new_tool;
         log_info("Existing tool requested.");
         return;
     }
 
-    // if (new_tool > TOOL_COUNT) {
-    //     log_info("Tool requested is out of range.");
-    //     return;
-    // }
+    if (new_tool > TOOL_COUNT) {
+        Error tool_number_error = Error::InvalidValue;
+        report_status_message(tool_number_error, allChannels);
+        log_error("Tool requested is out of range.");
+        return;
+    }
 
     // protocol_buffer_synchronize();
     
