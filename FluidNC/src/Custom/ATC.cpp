@@ -10,11 +10,14 @@
 const uint8_t TOOL_COUNT = 5;
 uint8_t current_tool = 0;
 const float TOP_OF_Z = 80.0;
-struct Tool {
-    float mpos[MAX_N_AXIS];
-};
+// struct Tool {
+//     float mpos[MAX_N_AXIS];
+// };
 
-Tool tools[MAX_N_AXIS];
+// Tool tools[MAX_N_AXIS];
+
+const char* tool_xy_gcode[6];
+
 
 void convert_sys_mpos_to_array(float array_to_fill[MAX_N_AXIS]);
 void gc_exec_linef(bool sync_after, const char* format, ...);
@@ -22,16 +25,21 @@ void return_tool(uint8_t tool_num);
 void pickup_tool(uint8_t tool_num);
 
 void machine_init() {
-    tools[1].mpos[X_AXIS] = 0.0;
-    tools[1].mpos[Y_AXIS] = 0.0;
-    tools[2].mpos[X_AXIS] = 57.15;
-    tools[2].mpos[Y_AXIS] = 0.0;
-    tools[3].mpos[X_AXIS] = 114.3;
-    tools[3].mpos[Y_AXIS] = 0.0;
-    tools[4].mpos[X_AXIS] = 171.45;
-    tools[4].mpos[Y_AXIS] = 0.0;
-    tools[5].mpos[X_AXIS] = 228.6;
-    tools[5].mpos[Y_AXIS] = 0.0;
+    // tools[1].mpos[X_AXIS] = 0.0;
+    // tools[1].mpos[Y_AXIS] = 0.0;
+    // tools[2].mpos[X_AXIS] = 57.15;
+    // tools[2].mpos[Y_AXIS] = 0.0;
+    // tools[3].mpos[X_AXIS] = 114.3;
+    // tools[3].mpos[Y_AXIS] = 0.0;
+    // tools[4].mpos[X_AXIS] = 171.45;
+    // tools[4].mpos[Y_AXIS] = 0.0;
+    // tools[5].mpos[X_AXIS] = 228.6;
+    // tools[5].mpos[Y_AXIS] = 0.0;
+    tool_xy_gcode[1] = "G53 X0 Y0";
+    tool_xy_gcode[2] = "G53 X57.15 Y0";
+    tool_xy_gcode[3] = "G53 X114.3 Y0";
+    tool_xy_gcode[4] = "G53 X171.45 Y0";
+    tool_xy_gcode[5] = "G53 X228.6 Y0";
 }
 
 void user_tool_change(uint8_t new_tool) {
@@ -108,7 +116,7 @@ void return_tool(uint8_t tool_num) {
         return;
     }
     
-    gc_exec_linef(false, "G53 X%0.3f Y%0.3f", tools[tool_num].mpos[X_AXIS], tools[tool_num].mpos[Y_AXIS]);
+    gc_exec_linef(false, tool_xy_gcode[tool_num]);
     gc_exec_linef(false, "G53 Z10");
     gc_exec_linef(false, "S800 M4");
     gc_exec_linef(false, "G53 G1 Z.05 F760");
@@ -124,7 +132,7 @@ void pickup_tool(uint8_t tool_num) {
         report_status_message(Error::GcodeInvalidTarget, allChannels);
     }
 
-    gc_exec_linef(false, "G53 X%0.3f Y%0.3f", tools[tool_num].mpos[X_AXIS], tools[tool_num].mpos[Y_AXIS]);
+    gc_exec_linef(false, tool_xy_gcode[tool_num]);
     gc_exec_linef(false, "G53 Z0");
     gc_exec_linef(false, "S400 M4");
     gc_exec_linef(false, "M5");
