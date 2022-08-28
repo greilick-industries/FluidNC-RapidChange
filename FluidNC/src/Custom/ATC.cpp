@@ -35,11 +35,11 @@ void machine_init() {
     // tools[4].mpos[Y_AXIS] = 0.0;
     // tools[5].mpos[X_AXIS] = 228.6;
     // tools[5].mpos[Y_AXIS] = 0.0;
-    tool_xy_gcode[1] = "G53 X0 Y0";
-    tool_xy_gcode[2] = "G53 X57.15 Y0";
-    tool_xy_gcode[3] = "G53 X114.3 Y0";
-    tool_xy_gcode[4] = "G53 X171.45 Y0";
-    tool_xy_gcode[5] = "G53 X228.6 Y0";
+    tool_xy_gcode[1] = "G53 G0 X0 Y0";
+    tool_xy_gcode[2] = "G53 G0 X57.15 Y0";
+    tool_xy_gcode[3] = "G53 G0 X114.3 Y0";
+    tool_xy_gcode[4] = "G53 G0 X171.45 Y0";
+    tool_xy_gcode[5] = "G53 G0 X228.6 Y0";
 }
 
 void user_tool_change(uint8_t new_tool) {
