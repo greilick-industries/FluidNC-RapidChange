@@ -10,9 +10,6 @@
 const uint8_t TOOL_COUNT = 5;
 uint8_t current_tool = 0;
 const float TOP_OF_Z = 80.0;
-float top_of_z;
-const uint8_t FEED_RATE_TO_TOP_OF_Z = 2540;
-
 struct Tool {
     float mpos[MAX_N_AXIS];
 };
@@ -21,7 +18,6 @@ Tool tools[MAX_N_AXIS];
 
 void convert_sys_mpos_to_array(float array_to_fill[MAX_N_AXIS]);
 void gc_exec_linef(bool sync_after, const char* format, ...);
-
 void return_tool(uint8_t tool_num);
 void pickup_tool(uint8_t tool_num);
 
@@ -106,7 +102,7 @@ void gc_exec_linef(bool sync_after, const char* format, ...) {
 }
 
 void return_tool(uint8_t tool_num) {
-    gc_exec_linef(false, "G53 G1 Z%0.3f F%i", TOP_OF_Z, FEED_RATE_TO_TOP_OF_Z);
+    gc_exec_linef(false, "G53 G1 Z%0.3f F2540", TOP_OF_Z);
     
     if (tool_num == 0) {
         return;
