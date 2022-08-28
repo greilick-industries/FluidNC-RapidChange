@@ -147,7 +147,7 @@ void pickup_tool(uint8_t tool_num) {
     gc_exec_linef(false, "G38.2 G91 F250 Z25");
     gc_exec_linef(false, "G91 G0 Z-2");
     gc_exec_linef(false, "G38.2 G91 F25 Z25");
-    gc_exec_linef(false, "G10 L20 P0 Z63.2968");
+    gc_exec_linef(false, "G21 G10 L20 P0 Z63.2968");
     gc_exec_linef(false, "M5");
     gc_exec_linef(false, "G53 G0 G90 Z80");
     current_tool = tool_num;
