@@ -102,7 +102,7 @@ void gc_exec_linef(bool sync_after, const char* format, ...) {
 }
 
 void return_tool(uint8_t tool_num) {
-    gc_exec_linef(false, "G53 G1 Z%0.3f F2540", TOP_OF_Z);
+    gc_exec_linef(false, "G53 G1 Z80 F2540");
     
     if (tool_num == 0) {
         return;
