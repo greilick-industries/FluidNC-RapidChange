@@ -9,16 +9,37 @@
 
 const uint8_t TOOL_COUNT = 5;
 uint8_t current_tool = 0;
+const float TOP_OF_Z = 80.0;
+float top_of_z;
+const uint8_t FEED_RATE_TO_TOP_OF_Z = 2540;
+
+struct Tool {
+    float mpos[MAX_N_AXIS];
+};
+
+Tool tools[MAX_N_AXIS];
 
 void convert_sys_mpos_to_array(float array_to_fill[MAX_N_AXIS]);
 void gc_exec_linef(bool sync_after, const char* format, ...);
-bool return_tool(uint8_t tool_num);
+
+void return_tool(uint8_t tool_num);
+void pickup_tool(uint8_t tool_num);
 
 void machine_init() {
-
+    tools[1].mpos[X_AXIS] = 0.0;
+    tools[1].mpos[Y_AXIS] = 0.0;
+    tools[2].mpos[X_AXIS] = 57.15;
+    tools[2].mpos[Y_AXIS] = 0.0;
+    tools[3].mpos[X_AXIS] = 114.3;
+    tools[3].mpos[Y_AXIS] = 0.0;
+    tools[4].mpos[X_AXIS] = 171.45;
+    tools[4].mpos[Y_AXIS] = 0.0;
+    tools[5].mpos[X_AXIS] = 228.6;
+    tools[5].mpos[Y_AXIS] = 0.0;
 }
 
 void user_tool_change(uint8_t new_tool) {
+    bool units_were_inches = false;
     bool was_incremental = false;
     float saved_mpos[MAX_N_AXIS] = {};
 
@@ -40,11 +61,32 @@ void user_tool_change(uint8_t new_tool) {
     // Turn off spindle if its on
     gc_exec_linef(false, "M5");
 
+    // Record current gcode parser state and then set to atc state
     if (gc_state.modal.distance == Distance::Incremental) {
         was_incremental = true;
         gc_exec_linef(false, "G90");
     }
 
+    if (gc_state.modal.units == Units::Inches) {
+        units_were_inches = true;
+        gc_exec_linef(false, "G21");
+    }
+
+    return_tool(current_tool);
+    pickup_tool(new_tool);
+
+    // Move to previous XY
+    gc_exec_linef(false, "G53 X%0.3f Y%0.3f", saved_mpos[X_AXIS], saved_mpos[Y_AXIS]);
+    // TODO check for work area and move to previous
+
+    // Reset previous gcode parser state
+    if (was_incremental) {
+        gc_exec_linef(false, "G91");
+    }
+
+    if (units_were_inches) {
+        gc_exec_linef(false, "G20");
+    }
 }
 
 void convert_sys_mpos_to_array(float array_to_fill[MAX_N_AXIS]) {
@@ -63,9 +105,46 @@ void gc_exec_linef(bool sync_after, const char* format, ...) {
     report_status_message(line_executed, allChannels);
 }
 
-bool return_tool(uint8_t tool_num) {
+void return_tool(uint8_t tool_num) {
+    gc_exec_linef(false, "G53 G1 Z%0.3f F%i", TOP_OF_Z, FEED_RATE_TO_TOP_OF_Z);
+    
     if (tool_num == 0) {
-        return false;
+        return;
     }
-    return true;
+    
+    gc_exec_linef(false, "G53 X%0.3f Y%0.3f", tools[tool_num].mpos[X_AXIS], tools[tool_num].mpos[Y_AXIS]);
+    gc_exec_linef(false, "G53 Z10");
+    gc_exec_linef(false, "S800 M4");
+    gc_exec_linef(false, "G53 G1 Z.05 F760");
+    gc_exec_linef(false, "G4 P.5");
+    gc_exec_linef(false, "G53 Z5");
+    gc_exec_linef(false, "M5");
+    gc_exec_linef(false, "G53 G0 Z80");
+    current_tool = 0;
+}
+
+void pickup_tool(uint8_t tool_num) {
+    if (current_tool != 0) {
+        report_status_message(Error::GcodeInvalidTarget, allChannels);
+    }
+
+    gc_exec_linef(false, "G53 X%0.3f Y%0.3f", tools[tool_num].mpos[X_AXIS], tools[tool_num].mpos[Y_AXIS]);
+    gc_exec_linef(false, "G53 Z0");
+    gc_exec_linef(false, "S400 M4");
+    gc_exec_linef(false, "M5");
+    gc_exec_linef(false, "G4 P1");
+    gc_exec_linef(false, "S2000 M3");
+    gc_exec_linef(false, "G53 G0 Z13");
+    gc_exec_linef(false, "S800 M3");
+    gc_exec_linef(false, "G53 G1 Z0 F1270");
+    gc_exec_linef(false, "G53 G0 Z60");
+    gc_exec_linef(false, "G4 P1");
+    gc_exec_linef(false, "S8000 M3");
+    gc_exec_linef(false, "G38.2 G91 F250 Z25");
+    gc_exec_linef(false, "G91 G0 Z-2");
+    gc_exec_linef(false, "G38.2 G91 F25 Z25");
+    gc_exec_linef(false, "G10 L20 P0 Z63.2968");
+    gc_exec_linef(false, "M5");
+    gc_exec_linef(false, "G53 G0 G90 Z80");
+    current_tool = tool_num;
 }
