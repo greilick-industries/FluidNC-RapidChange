@@ -91,6 +91,7 @@ void user_tool_change(uint8_t new_tool) {
     if (units_were_inches) {
         gc_exec_linef(false, "G20");
     }
+    log_info("Tool change complete.");
 }
 
 void convert_sys_mpos_to_array(float array_to_fill[MAX_N_AXIS]) {
