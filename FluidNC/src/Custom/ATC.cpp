@@ -80,7 +80,8 @@ void user_tool_change(uint8_t new_tool) {
     pickup_tool(new_tool);
 
     // Move to previous XY
-    gc_exec_linef(false, "G53 X%0.3f Y%0.3f", saved_mpos[X_AXIS], saved_mpos[Y_AXIS]);
+    
+    // gc_exec_linef(false, "G53 X%0.3f Y%0.3f", saved_mpos[X_AXIS], saved_mpos[Y_AXIS]);
     // TODO check for work area and move to previous
 
     // Reset previous gcode parser state
