@@ -105,26 +105,29 @@ void gc_exec_linef(bool sync_after, const char* format, ...) {
     char gc_line[30];
     gc_line[strlen(format)] = '\r';
     sprintf(gc_line, format, args);
-    // Error line_executed = execute_line(gc_line, allChannels, WebUI::AuthenticationLevel::LEVEL_GUEST);
-    // report_status_message(line_executed, allChannels);
-    WebUI::inputBuffer.push(gc_line);
+    Error line_executed = execute_line(gc_line, allChannels, WebUI::AuthenticationLevel::LEVEL_GUEST);
+    report_status_message(line_executed, allChannels);
+    
+    if (sync_after) {
+        protocol_buffer_synchronize();
+    }
 }
 
 void return_tool(uint8_t tool_num) {
-    gc_exec_linef(false, "G53 G1 Z80 F2540");
+    gc_exec_linef(true, "G53 G1 Z80 F2540");
     
     if (tool_num == 0) {
         return;
     }
     
-    gc_exec_linef(false, tool_xy_gcode[tool_num]);
-    gc_exec_linef(false, "G53 Z10");
+    gc_exec_linef(true, tool_xy_gcode[tool_num]);
+    gc_exec_linef(true, "G53 Z10");
     gc_exec_linef(false, "S800 M4");
-    gc_exec_linef(false, "G53 G1 Z.05 F760");
+    gc_exec_linef(true, "G53 G1 Z.05 F760");
     gc_exec_linef(false, "G4 P.5");
-    gc_exec_linef(false, "G53 Z5");
+    gc_exec_linef(true, "G53 Z5");
     gc_exec_linef(false, "M5");
-    gc_exec_linef(false, "G53 G0 Z80");
+    gc_exec_linef(true, "G53 G0 Z80");
     current_tool = 0;
 }
 
@@ -133,21 +136,21 @@ void pickup_tool(uint8_t tool_num) {
         report_status_message(Error::GcodeInvalidTarget, allChannels);
     }
 
-    gc_exec_linef(false, tool_xy_gcode[tool_num]);
-    gc_exec_linef(false, "G53 Z0");
+    gc_exec_linef(true, tool_xy_gcode[tool_num]);
+    gc_exec_linef(true, "G53 Z0");
     gc_exec_linef(false, "S400 M4");
     gc_exec_linef(false, "M5");
     gc_exec_linef(false, "G4 P1");
     gc_exec_linef(false, "S2000 M3");
-    gc_exec_linef(false, "G53 G0 Z13");
+    gc_exec_linef(true, "G53 G0 Z13");
     gc_exec_linef(false, "S800 M3");
-    gc_exec_linef(false, "G53 G1 Z0 F1270");
-    gc_exec_linef(false, "G53 G0 Z60");
+    gc_exec_linef(true, "G53 G1 Z0 F1270");
+    gc_exec_linef(true, "G53 G0 Z60");
     gc_exec_linef(false, "G4 P1");
     gc_exec_linef(false, "S8000 M3");
     gc_exec_linef(false, "G38.2 G91 F100 Z25");
-    gc_exec_linef(false, "G21 G10 L20 P0 Z63.2968");
+    gc_exec_linef(true, "G21 G10 L20 P0 Z63.2968");
     gc_exec_linef(false, "M5");
-    gc_exec_linef(false, "G53 G0 G90 Z80");
+    gc_exec_linef(true, "G53 G0 G90 Z80");
     current_tool = tool_num;
 }
