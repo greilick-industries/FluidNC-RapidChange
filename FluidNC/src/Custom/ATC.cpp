@@ -102,7 +102,7 @@ void convert_sys_mpos_to_array(float array_to_fill[MAX_N_AXIS]) {
 
 void gc_exec_linef(bool sync_after, const char* format, ...) {
     va_list args;
-    char gc_line[50];
+    char gc_line[30];
     gc_line[strlen(format)] = '\r';
     sprintf(gc_line, format, args);
     // Error line_executed = execute_line(gc_line, allChannels, WebUI::AuthenticationLevel::LEVEL_GUEST);
