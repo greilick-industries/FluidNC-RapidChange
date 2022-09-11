@@ -8,7 +8,5 @@ void machine_init() {
 }
 
 void user_tool_change(uint8_t new_tool) {
-    RapidChangeConfig& rapid_change_config = *(config->_rapid_change);
-    rapid_change_config.execute();
+    log_info(config->_rapid_change->x_mpos_);
 }
-
