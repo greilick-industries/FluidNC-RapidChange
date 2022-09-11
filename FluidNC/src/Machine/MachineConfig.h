@@ -25,6 +25,9 @@
 #include "UserOutputs.h"
 #include "Macros.h"
 
+// Rapid Change
+#include "../Custom/RapidChangeConfig.h"
+
 namespace Machine {
     using ::Kinematics::Kinematics;
 
@@ -67,6 +70,10 @@ namespace Machine {
         SDCard*               _sdCard      = nullptr;
         Macros*               _macros      = nullptr;
         Start*                _start       = nullptr;
+
+        // Rapid Change
+        RapidChangeConfig*          _rapid_change = nullptr;
+
         Spindles::SpindleList _spindles;
 
         float _arcTolerance      = 0.002f;
