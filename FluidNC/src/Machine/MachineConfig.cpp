@@ -50,7 +50,7 @@ namespace Machine {
         handler.section("user_outputs", _userOutputs);
 
         // Rapid Change
-        handler.section("rapid_change", _rapid_change);
+        handler.section("rapid_change", _rapidChange);
 
         // TODO: Consider putting these under a gcode: hierarchy level? Or motion control?
         handler.item("arc_tolerance_mm", _arcTolerance, 0.001, 1.0);
@@ -253,5 +253,8 @@ namespace Machine {
         delete _spi;
         delete _control;
         delete _macros;
+
+        // RapidChange
+        delete _rapidChange;
     }
 }

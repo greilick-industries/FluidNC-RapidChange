@@ -26,7 +26,7 @@
 #include "Macros.h"
 
 // Rapid Change
-#include "../Custom/RapidChangeConfig.h"
+#include "../Custom/RapidChange.h"
 
 namespace Machine {
     using ::Kinematics::Kinematics;
@@ -72,7 +72,7 @@ namespace Machine {
         Start*                _start       = nullptr;
 
         // Rapid Change
-        RapidChangeConfig*          _rapid_change = nullptr;
+        RapidChange*    _rapidChange = nullptr;
 
         Spindles::SpindleList _spindles;
 
