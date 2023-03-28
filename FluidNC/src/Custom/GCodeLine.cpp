@@ -1,6 +1,6 @@
 #include "GCodeLine.h"
 
-namespace GCodeMacro {
+namespace RapidChange {
     GCodeLineBuilder GCodeLine::Write() {
         return GCodeLineBuilder();
     }

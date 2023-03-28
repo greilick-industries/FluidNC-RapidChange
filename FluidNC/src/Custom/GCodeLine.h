@@ -5,9 +5,9 @@
 #include <map>
 #include <sstream>
 
-//using namespace std;
+using namespace std;
 
-namespace GCodeMacro {
+namespace RapidChange {
     typedef pair<WordGroup, string> WordMapPair;
     typedef std::map<WordGroup, string>::iterator WordMapIterator;
     typedef pair<WordMapIterator, bool> WordMapInsertResult;

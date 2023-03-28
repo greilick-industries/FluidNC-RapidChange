@@ -4,7 +4,7 @@
 
 using namespace std;
 
-namespace GCodeMacro {
+namespace RapidChange {
     enum class WordGroup : uint8_t {
         kDistance,
         kUnits,
