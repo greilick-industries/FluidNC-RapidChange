@@ -18,6 +18,7 @@ namespace RapidChange {
         kYAxis,
         kZAxis,
         kFeedRate,
+        kStopping
     };
 
 namespace Letters {

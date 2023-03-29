@@ -53,6 +53,11 @@ namespace RapidChange {
         return *this;
     }
 
+    GCodeLineBuilder& GCodeLineBuilder::PauseExecution() {
+        AddWord(WordGroup::kStopping, Join(Letters::kM, Numbers::kZero));
+        return *this;
+    }
+
     GCodeLineBuilder& GCodeLineBuilder::ProbeToward() {
         AddWord(WordGroup::kMotion, Join(Letters::kG, Numbers::kThirtyEightPointTwo, Numbers::kOne));
         return *this;

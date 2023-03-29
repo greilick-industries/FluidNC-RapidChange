@@ -43,6 +43,7 @@ namespace RapidChange {
             GCodeLineBuilder& SetCoordinateSystem(uint8_t coordinate_system);
             GCodeLineBuilder& MoveRapid();
             GCodeLineBuilder& MoveLinear();
+            GCodeLineBuilder& PauseExecution();
             GCodeLineBuilder& ProbeToward();
             GCodeLineBuilder& SpindleCW();
             GCodeLineBuilder& SpindleCCW();
