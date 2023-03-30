@@ -22,10 +22,6 @@ namespace RapidChange {
         EnumItem(Magazine::ER0011)
     };
 
-    Magazine::Magazine() {        
-        
-    }
-
     void Magazine::group(Configuration::HandlerBase& handler) {
         handler.item("x_ref_pos", x_ref_pos_);
         handler.item("y_ref_pos_", y_ref_pos_);
@@ -39,10 +35,6 @@ namespace RapidChange {
 
     void Magazine::afterParse() {
 
-    }
-
-    Magazine::~Magazine() {
-        
     }
 }
 

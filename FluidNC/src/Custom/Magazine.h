@@ -9,7 +9,7 @@ namespace RapidChange {
         private:           
 
         public:
-            Magazine();
+            Magazine() = default;
 
             float x_ref_pos_ = NOT_ASSIGNED;
             float y_ref_pos_ = NOT_ASSIGNED;
@@ -42,7 +42,7 @@ namespace RapidChange {
 
             void group(Configuration::HandlerBase& handler) override;
             void afterParse() override;
-            ~Magazine();
+            ~Magazine() = default;
     };
 }
 
