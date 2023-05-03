@@ -254,7 +254,7 @@ namespace Machine {
         delete _control;
         delete _macros;
 
-        // Magazine
+        // RapidChange
         delete _rapidChange;
     }
 }

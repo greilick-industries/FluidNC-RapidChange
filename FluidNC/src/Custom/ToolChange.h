@@ -18,20 +18,34 @@ struct StoredState {
     Units units;
 };
 
-Preferences preferences;
-StoredState stored_state;
+enum SpinState {
+    CW = 3,
+    CCW = 4,
+    STOP = 5
+};
+
 uint8_t current_tool = 0;
 bool current_tool_fetched = false;
+Preferences preferences;
+StoredState stored_state;
+RapidChange::RapidChange* rapid_change;
 
-void fetch_current_tool();
+void spin_cw(int speed);
+void spin_ccw(int speed);
+void spin_stop();
 void execute_linef(bool sync_after, const char* format, ...);
-void go_above_tool(uint8_t tool_num);
-void go_to_safe_clearance();
+void fetch_current_tool();
+void go_to_tool_xy(uint8_t tool_num);
+void go_to_z(float position);
+void go_to_z(float position, int feedrate);
 void message_start();
 void operate_dust_cover(bool open);
+void get_tool(uint8_t tool_num);
+void set_tool(uint8_t tool_num);
+void set_tool_infrared();
+void set_tool_touch();
 void record_state();
 void restore_state();
-void return_tool();
-void set_tool_change_state();
-void pickup_tool(uint8_t tool_num);
-bool drop_tool(uint8_t tool_num);
+void drop_tool();
+void set_rapid_change_state();
+bool spindle_has_tool();
