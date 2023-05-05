@@ -27,10 +27,11 @@ namespace RapidChange {
     };
 
     float RapidChange::calculate_tool_pos(uint8_t axis, uint8_t tool_num, float ref_value) {
+        int multiplier = this->direction_ == POSITIVE ? 1 : -1;
         if (axis == this->orientation_) {
-            return ref_value;
+            return ref_value + (tool_num - 1) * this->pocket_offset_ * multiplier;
         } else {
-            return ref_value + (tool_num - 1) * this->pocket_offset_ * this->direction_;
+            return ref_value;
         }
     }
 
@@ -57,10 +58,19 @@ namespace RapidChange {
     }
 
     void RapidChange::group(Configuration::HandlerBase& handler) {
+        handler.item("collet", collet_, collets);
+        handler.item("pockets", pockets_);
+        handler.item("direction", direction_, directions);
+        handler.item("orientation", orientation_, orientations);
+        handler.item("probe", probe_, probes);
+        handler.item("disable_tool_recognition", disable_tool_recognition_);
+
         handler.item("pocket_one_x_pos", pocket_one_x_pos_);
         handler.item("pocket_one_y_pos", pocket_one_y_pos_);
         handler.item("manual_x_pos", manual_x_pos_);
         handler.item("manual_y_pos", manual_y_pos_);
+        handler.item("touch_probe_x_pos", touch_probe_x_pos_);
+        handler.item("touch_probe_y_pos", touch_probe_y_pos_);
 
         handler.item("engage_z", engage_z_);
         handler.item("back_off_engage_z", back_off_engage_z_);
@@ -71,24 +81,20 @@ namespace RapidChange {
         handler.item("infrared_probe_start_z", infrared_probe_start_z_);
         handler.item("infrared_tool_setter_z", infrared_tool_setter_z_);
         handler.item("touch_tool_setter_z", touch_tool_setter_z_);
-        handler.item("safe_clearance_z", safe_clearance_z_);      
+        handler.item("safe_clearance_z", safe_clearance_z_); 
+        handler.item("touch_probe_max_distance", touch_probe_max_distance_);     
 
         handler.item("engage_feedrate", engage_feedrate_);
         handler.item("infrared_probe_feedrate", infrared_probe_feedrate_);
         handler.item("touch_probe_feedrate", touch_probe_feedrate_);
-        handler.item("dust_cover_pin", dust_cover_pin_);
-        handler.item("infrared_pin", infrared_pin_);
 
         handler.item("spin_speed_engage_cw", spin_speed_engage_cw_);
         handler.item("spin_speed_engage_ccw", spin_speed_engage_ccw_);
         handler.item("spin_speed_infrared_probe", spin_speed_infrared_probe_);
-
-        handler.item("collet", collet_, collets);
-        handler.item("direction", direction_, directions);
-        handler.item("orientation", orientation_, orientations);
-        handler.item("probe", probe_, probes);
-        handler.item("pockets", pockets_);
-        handler.item("disable_tool_recognition", disable_tool_recognition_);
+        
+        handler.item("dust_cover_pin", dust_cover_pin_);
+        handler.item("infrared_pin", infrared_pin_);
+        
     }
 
     void RapidChange::afterParse() {

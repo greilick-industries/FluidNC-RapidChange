@@ -15,12 +15,14 @@ namespace RapidChange {
         public:
             RapidChange() = default;
 
-            bool disable_tool_recognition_ = false;
+            bool disable_tool_recognition_ = true;
 
             float pocket_one_x_pos_ = NOT_ASSIGNED;
             float pocket_one_y_pos_ = NOT_ASSIGNED;
             float manual_x_pos_ = NOT_ASSIGNED;
             float manual_y_pos_ = NOT_ASSIGNED;
+            float touch_probe_x_pos_ = NOT_ASSIGNED;
+            float touch_probe_y_pos_ = NOT_ASSIGNED;
 
             float engage_z_ = NOT_ASSIGNED;
             float back_off_engage_z_ = NOT_ASSIGNED;
@@ -32,6 +34,7 @@ namespace RapidChange {
             float infrared_tool_setter_z_ = NOT_ASSIGNED;
             float touch_tool_setter_z_ = NOT_ASSIGNED;
             float safe_clearance_z_ = NOT_ASSIGNED;
+            float touch_probe_max_distance_ = NOT_ASSIGNED;
 
             int collet_ = ER11;
             int direction_ = POSITIVE;
@@ -50,8 +53,8 @@ namespace RapidChange {
             Pin infrared_pin_;      
 
             enum direction {
-                NEGATIVE = -1,
-                POSITIVE = 1,
+                NEGATIVE = 0,
+                POSITIVE
             };
             enum orientation {
                 X_AXIS = 0,

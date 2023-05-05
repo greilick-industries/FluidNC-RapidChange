@@ -23,8 +23,7 @@ void user_tool_change(uint8_t new_tool) {
     go_to_z(rapid_change->safe_clearance_z_);
     operate_dust_cover(CLOSE_DUST_COVER);
     restore_state();
-    
-    log_info("Made it here.");
+        
     rapid_change = nullptr;
 }
 
@@ -132,6 +131,7 @@ void drop_tool() {
     if (rapid_change->tool_has_pocket(current_tool)) {
         uint8_t attempts = 0;
         do {
+            go_to_tool_xy(current_tool);
             go_to_z(rapid_change->spindle_start_z_);
             spin_ccw(rapid_change->spin_speed_engage_ccw_);
             go_to_z(rapid_change->engage_z_, rapid_change->engage_feedrate_);
@@ -215,10 +215,14 @@ void get_tool(uint8_t tool_num) {
 
 void set_tool(uint8_t tool_num) {
     // if selected tool is 0, we're done
-    if (tool_num == 0) return;
+    if (tool_num == 0) {
+        spin_stop();
+        return;
+    }
     // switch on probe config
     switch (rapid_change->probe_) {
         case RapidChange::RapidChange::probe::NONE:
+            spin_stop();
             return;
         case RapidChange::RapidChange::probe::INFRARED:
             set_tool_infrared();
@@ -240,7 +244,12 @@ void set_tool(uint8_t tool_num) {
 void set_tool_infrared() {}
 
 void set_tool_touch() {
-
+    spin_stop();
+    go_to_z(rapid_change->go_to_touch_probe_z_);
+    go_to_tool_xy(0);
+    go_to_z(rapid_change->touch_probe_start_z_);
+    execute_linef(true, "G38.2 G91 F%d Z%5.3f", rapid_change->touch_probe_feedrate_, -1 * rapid_change->touch_probe_max_distance_);
+    execute_linef(false, "G10 L20 P0 Z%5.3f", rapid_change->touch_tool_setter_z_);
 }
 
 bool spindle_has_tool() {
