@@ -232,7 +232,7 @@ void set_tool_infrared() {
 void set_tool_touch() {
     spin_stop();
     go_to_z(rapid_change->go_to_touch_probe_z_);
-    go_to_tool_xy(0);
+    go_to_touch_probe_xy();
     go_to_z(rapid_change->touch_probe_start_z_);
     execute_linef(true, "G38.2 G91 F%d Z%5.3f", rapid_change->touch_probe_feedrate_, -1 * rapid_change->touch_probe_max_distance_);
     execute_linef(false, "G10 L20 P0 Z%5.3f", rapid_change->touch_tool_setter_z_);
