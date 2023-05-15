@@ -48,6 +48,12 @@ void execute_linef(bool sync_after, const char* format, ...) {
     }
 }
 
+void go_to_touch_probe_xy() {
+    float x_pos = rapid_change->get_touch_probe_pos(X_AXIS);
+    float y_pos = rapid_change->get_touch_probe_pos(Y_AXIS);
+    execute_linef(true, "G53 G0 X%5.3f Y%5.3f", x_pos, y_pos);
+}
+
 void go_to_tool_xy(uint8_t tool_num) {
     float x_pos = rapid_change->get_tool_pos(X_AXIS, tool_num);
     float y_pos = rapid_change->get_tool_pos(Y_AXIS, tool_num);

@@ -77,6 +77,7 @@ namespace RapidChange {
                 TOUCH
             };            
             
+            float get_touch_probe_pos(uint8_t axis);
             float get_tool_pos(uint8_t axis, uint8_t tool_num);
             bool tool_has_pocket(uint8_t tool_num);
 

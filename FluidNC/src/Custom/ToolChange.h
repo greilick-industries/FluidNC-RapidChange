@@ -31,6 +31,7 @@ void spin_cw(int speed);
 void spin_ccw(int speed);
 void spin_stop();
 void execute_linef(bool sync_after, const char* format, ...);
+void go_to_touch_probe_xy();
 void go_to_tool_xy(uint8_t tool_num);
 void go_to_z(float position);
 void go_to_z(float position, int feedrate);

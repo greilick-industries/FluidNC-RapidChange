@@ -43,6 +43,14 @@ namespace RapidChange {
         }
     }
 
+    float RapidChange::get_touch_probe_pos(uint8_t axis) {
+        if (axis == X_AXIS) {
+            return this->touch_probe_x_pos_;
+        } else {
+            return this->touch_probe_y_pos_;
+        }
+    }
+
     float RapidChange::get_tool_pos(uint8_t axis, uint8_t tool_num) {
         if (!tool_has_pocket(tool_num)) {
             return get_manual_pos(axis);
