@@ -1,10 +1,10 @@
 #include "ToolChange.h"
 
+void user_select_tool(uint8_t new_tool) {
+    current_tool = new_tool;
+}
+
 void user_tool_change(uint8_t new_tool) {
-    if (!current_tool_fetched) {
-        fetch_current_tool();
-    }
-    
     message_start();
     if (current_tool == new_tool) {
         log_info("Tool change bypassed. Selected tool is the current tool.");
@@ -25,21 +25,6 @@ void user_tool_change(uint8_t new_tool) {
     restore_state();
         
     rapid_change = nullptr;
-}
-
-void fetch_current_tool() {
-    current_tool_fetched = true;
-    if (preferences.begin(RC_PREF_NAMESPACE, false)) {
-        if (!preferences.isKey(CURRENT_TOOL_KEY) && !preferences.putUChar(CURRENT_TOOL_KEY, 0)) {
-            log_error("Tool peristance error: Current tool will not persist beyond shutdown.");
-            preferences.end();
-            return;
-        }
-        current_tool = preferences.getUChar(CURRENT_TOOL_KEY);
-    } else {
-        log_error("Tool peristance error: Current tool will not persist beyond shutdown.");
-    }
-    preferences.end();
 }
 
 void execute_linef(bool sync_after, const char* format, ...) {
@@ -156,7 +141,6 @@ void drop_tool() {
     }
     // tool has been removed, set current tool to 0
     current_tool = 0;
-    preferences.putUInt(CURRENT_TOOL_KEY, 0);
 }
 
 void spin_cw(int speed) {
@@ -179,7 +163,6 @@ void get_tool(uint8_t tool_num) {
     // if selected tool is tool 0, set current tool to 0 and we're done
     if (tool_num == 0) {
         current_tool = tool_num;
-        preferences.putUInt(CURRENT_TOOL_KEY, tool_num);
         return;
     }
 
@@ -209,8 +192,6 @@ void get_tool(uint8_t tool_num) {
         log_info("Please attach the selected tool and press cycle start to continue.");
     }
     current_tool = tool_num;
-    preferences.putUInt(CURRENT_TOOL_KEY, tool_num);
-    
 }
 
 void set_tool(uint8_t tool_num) {
@@ -233,15 +214,14 @@ void set_tool(uint8_t tool_num) {
         default:
             return;
     }
-
-    if (rapid_change->probe_ == RapidChange::RapidChange::probe::INFRARED)
-    execute_linef(true, "G38.2 G91 F300 Z57");
-    execute_linef(true, "G0 G91 Z-2");
-    execute_linef(true, "G38.2 G91 F25 Z57");
-    execute_linef(false, "G10 L20 P0 Z74.5898");
 }
 
-void set_tool_infrared() {}
+void set_tool_infrared() {
+    // execute_linef(true, "G38.2 G91 F300 Z57");
+    // execute_linef(true, "G0 G91 Z-2");
+    // execute_linef(true, "G38.2 G91 F25 Z57");
+    // execute_linef(false, "G10 L20 P0 Z74.5898");
+}
 
 void set_tool_touch() {
     spin_stop();
@@ -250,6 +230,7 @@ void set_tool_touch() {
     go_to_z(rapid_change->touch_probe_start_z_);
     execute_linef(true, "G38.2 G91 F%d Z%5.3f", rapid_change->touch_probe_feedrate_, -1 * rapid_change->touch_probe_max_distance_);
     execute_linef(false, "G10 L20 P0 Z%5.3f", rapid_change->touch_tool_setter_z_);
+    execute_linef(false, "G90");
 }
 
 bool spindle_has_tool() {
@@ -257,5 +238,11 @@ bool spindle_has_tool() {
         return false;
     } else {
         return !(rapid_change->infrared_pin_.read());
+    }
+}
+
+void user_M30() {
+    if (current_tool != 0) {
+        execute_linef(true, "M6 T0");
     }
 }

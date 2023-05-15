@@ -15,42 +15,57 @@ namespace RapidChange {
         public:
             RapidChange() = default;
 
+            // magazine settings
+            int collet_ = ER11;
+            int direction_ = POSITIVE;
+            int orientation_ = X_AXIS;
             bool disable_tool_recognition_ = true;
+            int probe_ = NONE;
+            int pockets_ = 5;
 
+            // location and feedrate
             float pocket_one_x_pos_ = NOT_ASSIGNED;
             float pocket_one_y_pos_ = NOT_ASSIGNED;
             float manual_x_pos_ = NOT_ASSIGNED;
             float manual_y_pos_ = NOT_ASSIGNED;
-            float touch_probe_x_pos_ = NOT_ASSIGNED;
-            float touch_probe_y_pos_ = NOT_ASSIGNED;
+            int engage_feedrate_ = 300;
+            int spin_speed_engage_cw_ = 1000;
+            int spin_speed_engage_ccw_ = 1000;
 
+            // tool change z heights
             float engage_z_ = NOT_ASSIGNED;
             float back_off_engage_z_ = NOT_ASSIGNED;
             float spindle_start_z_ = NOT_ASSIGNED;
             float tool_recognition_z_ = NOT_ASSIGNED;
-            float go_to_touch_probe_z_ = NOT_ASSIGNED;
-            float infrared_probe_start_z_ = NOT_ASSIGNED;
-            float touch_probe_start_z_ = NOT_ASSIGNED;
-            float infrared_tool_setter_z_ = NOT_ASSIGNED;
-            float touch_tool_setter_z_ = NOT_ASSIGNED;
             float safe_clearance_z_ = NOT_ASSIGNED;
+
+            // touch probe
+            float touch_probe_x_pos_ = NOT_ASSIGNED;
+            float touch_probe_y_pos_ = NOT_ASSIGNED;
+            float go_to_touch_probe_z_ = NOT_ASSIGNED;
+            float touch_probe_start_z_ = NOT_ASSIGNED;
+            float touch_tool_setter_z_ = NOT_ASSIGNED;
             float touch_probe_max_distance_ = NOT_ASSIGNED;
-
-            int collet_ = ER11;
-            int direction_ = POSITIVE;
-            int orientation_ = X_AXIS;
-            int probe_ = 0;
-            int pockets_ = 5;
-
-            int engage_feedrate_ = 300;
-            int infrared_probe_feedrate_ = 300;
             int touch_probe_feedrate_ = 100;
-            int spin_speed_engage_cw_ = 1000;
-            int spin_speed_engage_ccw_ = 1000;
+            
+            // infrared probe
+            float infrared_probe_start_z_ = NOT_ASSIGNED;
+            float infrared_tool_setter_z_ = NOT_ASSIGNED;
+            int infrared_probe_feedrate_ = 300;
             int spin_speed_infrared_probe_ = 3000;
-
+            
+            //Pins
             Pin dust_cover_pin_;
-            Pin infrared_pin_;      
+            Pin infrared_pin_;
+            
+
+            
+            
+            
+            
+            
+
+                  
 
             enum direction {
                 NEGATIVE = 0,

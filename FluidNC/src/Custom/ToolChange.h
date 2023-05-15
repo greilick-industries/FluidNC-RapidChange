@@ -3,7 +3,6 @@
 #include "../Protocol.h"
 #include "../Serial.h"
 #include "../Settings.h"
-#include <Preferences.h>
 #include <stdarg.h>
 
 #define RC_PREF_NAMESPACE "rapid_change"
@@ -25,8 +24,6 @@ enum SpinState {
 };
 
 uint8_t current_tool = 0;
-bool current_tool_fetched = false;
-Preferences preferences;
 StoredState stored_state;
 RapidChange::RapidChange* rapid_change;
 
@@ -34,7 +31,6 @@ void spin_cw(int speed);
 void spin_ccw(int speed);
 void spin_stop();
 void execute_linef(bool sync_after, const char* format, ...);
-void fetch_current_tool();
 void go_to_tool_xy(uint8_t tool_num);
 void go_to_z(float position);
 void go_to_z(float position, int feedrate);
