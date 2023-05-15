@@ -47,8 +47,11 @@ namespace Machine {
         handler.section("probe", _probe);
         handler.section("macros", _macros);
         handler.section("start", _start);
-
         handler.section("user_outputs", _userOutputs);
+
+        // Rapid Change
+        handler.section("RapidChange", _rapidChange);
+
         // TODO: Consider putting these under a gcode: hierarchy level? Or motion control?
         handler.item("arc_tolerance_mm", _arcTolerance, 0.001, 1.0);
         handler.item("junction_deviation_mm", _junctionDeviation, 0.01, 1.0);
@@ -123,6 +126,11 @@ namespace Machine {
 
         if (_macros == nullptr) {
             _macros = new Macros();
+        }
+
+        // RapidChange
+        if (_rapidChange == nullptr) {
+            _rapidChange = new RapidChange::RapidChange();
         }
     }
 
@@ -250,5 +258,8 @@ namespace Machine {
         delete _spi;
         delete _control;
         delete _macros;
+
+        // RapidChange
+        delete _rapidChange;
     }
 }
