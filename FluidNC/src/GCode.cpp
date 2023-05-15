@@ -545,6 +545,11 @@ Error gc_execute_line(char* line, Channel& channel) {
                             FAIL(Error::GcodeUnsupportedCommand);  // [Unsupported M command]
                         }
                         break;
+                    // RapidChange addition
+                    case 61:
+                        gc_block.modal.tool_change = ToolChange::Select;
+                        mg_word_bit = ModalGroup::MM6;
+                        break;
                     case 62:
                         gc_block.modal.io_control = IoControl::DigitalOnSync;
                         mg_word_bit               = ModalGroup::MM10;
@@ -1397,8 +1402,11 @@ Error gc_execute_line(char* line, Channel& channel) {
     // [5. Select tool ]: NOT SUPPORTED. Only tracks tool value.
     //	gc_state.tool = gc_block.values.t;
     // [6. Change tool ]: NOT SUPPORTED
+
     if (gc_block.modal.tool_change == ToolChange::Enable) {
         user_tool_change(gc_state.tool);
+    } else if (gc_block.modal.tool_change == ToolChange::Select) {
+        user_select_tool(gc_state.tool);
     }
     // [7. Spindle control ]:
     if (gc_state.modal.spindle != gc_block.modal.spindle) {
@@ -1694,3 +1702,5 @@ void WEAK_LINK user_tool_change(uint8_t new_tool) {
     Spindles::Spindle::switchSpindle(new_tool, config->_spindles, spindle);
     report_ovr_counter = 0;  // Set to report change immediately
 }
+
+void WEAK_LINK user_select_tool(uint8_t new_tool) {}
