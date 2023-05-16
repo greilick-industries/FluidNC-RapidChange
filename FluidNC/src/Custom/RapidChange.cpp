@@ -65,45 +65,50 @@ namespace RapidChange {
         return tool_num != 0 && tool_num <= this->pockets_;
     }
 
-    bool RapidChange::is_valid_configuration() {
-        if (this->pocket_one_x_pos_ == NOT_ASSIGNED
-            || this->pocket_one_y_pos_ == NOT_ASSIGNED
-            || this-> manual_x_pos_ == NOT_ASSIGNED
-            || this-> manual_y_pos_ == NOT_ASSIGNED) {
-                this->validation_message_ = "XY Coordinates must be configured.";
-                return false;
-        }
-        if (this->engage_z_ == NOT_ASSIGNED
-            || this->back_off_engage_z_ == NOT_ASSIGNED
-            || this->spindle_start_z_ == NOT_ASSIGNED
-            || (this->tool_recognition_z_ == NOT_ASSIGNED && this->disable_tool_recognition_ == false)
-            || this->safe_clearance_z_ == NOT_ASSIGNED) {
-                this->validation_message_ = "Z Coordinates must be configured.";
-                return false;
-        }
-        if (this->probe_ == TOUCH && 
-            (this->touch_probe_x_pos_ == NOT_ASSIGNED 
-            || this->touch_probe_y_pos_ == NOT_ASSIGNED
-            || this->go_to_touch_probe_z_ == NOT_ASSIGNED
-            || this->touch_probe_start_z_ == NOT_ASSIGNED
-            || this->touch_tool_setter_z_ == NOT_ASSIGNED
-            || this->touch_probe_max_distance_ == NOT_ASSIGNED)) {
-                this->validation_message_ = "Touch Probe values must be configured if touch probe is enabled.";
-                return false;
-        }
-        if (this->probe_ == INFRARED &&
-            (this->infrared_probe_start_z_ == NOT_ASSIGNED
-            || this->infrared_tool_setter_z_ == NOT_ASSIGNED)) {
-                this->validation_message_ = "Infrared Probe values must be configured if laser probe is enabled.";
-                return false;
-        }
-        // configuration valid if we reached here
-        return true;
-    }
+    // bool RapidChange::is_valid_configuration() {
+    //     if (this->pocket_one_x_pos_ == NOT_ASSIGNED
+    //         || this->pocket_one_y_pos_ == NOT_ASSIGNED
+    //         || this-> manual_x_pos_ == NOT_ASSIGNED
+    //         || this-> manual_y_pos_ == NOT_ASSIGNED) {
+    //             this->validation_message_ = "XY Coordinates must be configured.";
+    //             return false;
+    //     }
+    //     if (this->engage_z_ == NOT_ASSIGNED
+    //         || this->back_off_engage_z_ == NOT_ASSIGNED
+    //         || this->spindle_start_z_ == NOT_ASSIGNED
+    //         || (this->tool_recognition_z_ == NOT_ASSIGNED && this->disable_tool_recognition_ == false)
+    //         || this->safe_clearance_z_ == NOT_ASSIGNED) {
+    //             this->validation_message_ = "Z Coordinates must be configured.";
+    //             return false;
+    //     }
+    //     if (this->probe_ == TOUCH && 
+    //         (this->touch_probe_x_pos_ == NOT_ASSIGNED 
+    //         || this->touch_probe_y_pos_ == NOT_ASSIGNED
+    //         || this->go_to_touch_probe_z_ == NOT_ASSIGNED
+    //         || this->touch_probe_start_z_ == NOT_ASSIGNED
+    //         || this->touch_tool_setter_z_ == NOT_ASSIGNED
+    //         || this->touch_probe_max_distance_ == NOT_ASSIGNED)) {
+    //             this->validation_message_ = "Touch Probe values must be configured if touch probe is enabled.";
+    //             return false;
+    //     }
+    //     if (this->probe_ == INFRARED &&
+    //         (this->infrared_probe_start_z_ == NOT_ASSIGNED
+    //         || this->infrared_tool_setter_z_ == NOT_ASSIGNED)) {
+    //             this->validation_message_ = "Infrared Probe values must be configured if infrared probe is enabled.";
+    //             return false;
+    //     }
+    //     if (!(this->disable_tool_recognition_) && this->infrared_pin_.name() == "NO_PIN" && this->probe_ != INFRARED) {
+    //         this->validation_message_ = "Infrared pin must be configured to enable tool recognition without infrared probing.";
+    //         return false;
+    //     }
 
-    const char* RapidChange::get_validation_message() {
-        return this->validation_message_;
-    }
+    //     // configuration valid if we reached here
+    //     return true;
+    // }
+
+    // const char* RapidChange::get_validation_message() {
+    //     return this->validation_message_;
+    // }
 
     void RapidChange::group(Configuration::HandlerBase& handler) {
         handler.item("collet", collet_, collets);

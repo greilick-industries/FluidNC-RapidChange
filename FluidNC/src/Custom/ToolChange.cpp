@@ -5,10 +5,10 @@ void user_select_tool(uint8_t new_tool) {
 }
 
 void user_tool_change(uint8_t new_tool) {
-    if (!rapid_change->is_valid_configuration()) {
-        log_info(rapid_change->get_validation_message());
-        return;
-    }
+    // if (!rapid_change->is_valid_configuration()) {
+    //     log_info(rapid_change->get_validation_message());
+    //     return;
+    // }
     message_start();
     if (current_tool == new_tool) {
         log_info("Tool change bypassed. Selected tool is the current tool.");
@@ -246,12 +246,15 @@ void set_tool_touch() {
 bool spindle_has_tool() {
     if (rapid_change->disable_tool_recognition_) {
         return false;
+    } else if (rapid_change->probe_ == RapidChange::RapidChange::probe::INFRARED) {
+        return !(config->_probe->get_state()); // If not triggered we have a tool
     } else {
         return !(rapid_change->infrared_pin_.read());
     }
 }
 
 void user_M30() {
+    // TODO: call user_tool_change? this doesn't work
     if (current_tool != 0) {
         execute_linef(true, "M6 T0");
     }

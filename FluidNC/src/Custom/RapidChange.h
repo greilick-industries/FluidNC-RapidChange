@@ -8,7 +8,7 @@ namespace RapidChange {
     class RapidChange : public Configuration::Configurable {
         private:           
             float pocket_offset_;
-            const char* validation_message_;
+            // const char* validation_message_;
 
             float calculate_tool_pos(uint8_t axis, uint8_t tool_num, float ref_value);
             float get_manual_pos(uint8_t axis);
@@ -83,8 +83,8 @@ namespace RapidChange {
             float get_touch_probe_pos(uint8_t axis);
             float get_tool_pos(uint8_t axis, uint8_t tool_num);
             bool tool_has_pocket(uint8_t tool_num);
-            bool is_valid_configuration();
-            const char* get_validation_message();
+            // bool is_valid_configuration();
+            // const char* get_validation_message();
 
             void group(Configuration::HandlerBase& handler) override;
             void afterParse() override;
