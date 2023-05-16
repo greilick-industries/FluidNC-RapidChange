@@ -27,7 +27,7 @@ namespace RapidChange {
     };
 
     float RapidChange::calculate_tool_pos(uint8_t axis, uint8_t tool_num, float ref_value) {
-        int multiplier = this->direction_ == POSITIVE ? 1 : -1;
+        int multiplier = this->magazine_direction_ == POSITIVE ? 1 : -1;
         if (axis == this->orientation_) {
             return ref_value + (tool_num - 1) * this->pocket_offset_ * multiplier;
         } else {
@@ -65,10 +65,51 @@ namespace RapidChange {
         return tool_num != 0 && tool_num <= this->pockets_;
     }
 
+    bool RapidChange::is_valid_configuration() {
+        if (this->pocket_one_x_pos_ == NOT_ASSIGNED
+            || this->pocket_one_y_pos_ == NOT_ASSIGNED
+            || this-> manual_x_pos_ == NOT_ASSIGNED
+            || this-> manual_y_pos_ == NOT_ASSIGNED) {
+                this->validation_message_ = "XY Coordinates must be configured.";
+                return false;
+        }
+        if (this->engage_z_ == NOT_ASSIGNED
+            || this->back_off_engage_z_ == NOT_ASSIGNED
+            || this->spindle_start_z_ == NOT_ASSIGNED
+            || (this->tool_recognition_z_ == NOT_ASSIGNED && this->disable_tool_recognition_ == false)
+            || this->safe_clearance_z_ == NOT_ASSIGNED) {
+                this->validation_message_ = "Z Coordinates must be configured.";
+                return false;
+        }
+        if (this->probe_ == TOUCH && 
+            (this->touch_probe_x_pos_ == NOT_ASSIGNED 
+            || this->touch_probe_y_pos_ == NOT_ASSIGNED
+            || this->go_to_touch_probe_z_ == NOT_ASSIGNED
+            || this->touch_probe_start_z_ == NOT_ASSIGNED
+            || this->touch_tool_setter_z_ == NOT_ASSIGNED
+            || this->touch_probe_max_distance_ == NOT_ASSIGNED)) {
+                this->validation_message_ = "Touch Probe values must be configured if touch probe is enabled.";
+                return false;
+        }
+        if (this->probe_ == INFRARED &&
+            (this->infrared_probe_start_z_ == NOT_ASSIGNED
+            || this->infrared_tool_setter_z_ == NOT_ASSIGNED)) {
+                this->validation_message_ = "Infrared Probe values must be configured if laser probe is enabled.";
+                return false;
+        }
+        // configuration valid if we reached here
+        return true;
+    }
+
+    const char* RapidChange::get_validation_message() {
+        return this->validation_message_;
+    }
+
     void RapidChange::group(Configuration::HandlerBase& handler) {
         handler.item("collet", collet_, collets);
         handler.item("pockets", pockets_);
-        handler.item("direction", direction_, directions);
+        handler.item("magazine_direction", magazine_direction_, directions);
+        handler.item("z_direction", z_direction_, directions);
         handler.item("orientation", orientation_, orientations);
         handler.item("probe", probe_, probes);
         handler.item("disable_tool_recognition", disable_tool_recognition_);

@@ -5,6 +5,10 @@ void user_select_tool(uint8_t new_tool) {
 }
 
 void user_tool_change(uint8_t new_tool) {
+    if (!rapid_change->is_valid_configuration()) {
+        log_info(rapid_change->get_validation_message());
+        return;
+    }
     message_start();
     if (current_tool == new_tool) {
         log_info("Tool change bypassed. Selected tool is the current tool.");
@@ -223,18 +227,18 @@ void set_tool(uint8_t tool_num) {
 }
 
 void set_tool_infrared() {
-    // execute_linef(true, "G38.2 G91 F300 Z57");
-    // execute_linef(true, "G0 G91 Z-2");
-    // execute_linef(true, "G38.2 G91 F25 Z57");
-    // execute_linef(false, "G10 L20 P0 Z74.5898");
+    execute_linef(true, "G38.2 G91 F%d Z%5.3f", rapid_change->infrared_probe_feedrate_, rapid_change->safe_clearance_z_ - rapid_change->tool_recognition_z_);
+    execute_linef(false, "G10 L20 P0 Z%5.3f", rapid_change->infrared_tool_setter_z_);
+    execute_linef(false, "G90");
 }
 
 void set_tool_touch() {
+    int direction_multiplier = rapid_change->z_direction_ = RapidChange::RapidChange::direction::POSITIVE ? 1 : -1;
     spin_stop();
     go_to_z(rapid_change->go_to_touch_probe_z_);
     go_to_touch_probe_xy();
     go_to_z(rapid_change->touch_probe_start_z_);
-    execute_linef(true, "G38.2 G91 F%d Z%5.3f", rapid_change->touch_probe_feedrate_, -1 * rapid_change->touch_probe_max_distance_);
+    execute_linef(true, "G38.2 G91 F%d Z%5.3f", rapid_change->touch_probe_feedrate_, -1 * direction_multiplier * rapid_change->touch_probe_max_distance_);
     execute_linef(false, "G10 L20 P0 Z%5.3f", rapid_change->touch_tool_setter_z_);
     execute_linef(false, "G90");
 }

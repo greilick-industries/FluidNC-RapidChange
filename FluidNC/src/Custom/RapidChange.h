@@ -8,6 +8,7 @@ namespace RapidChange {
     class RapidChange : public Configuration::Configurable {
         private:           
             float pocket_offset_;
+            const char* validation_message_;
 
             float calculate_tool_pos(uint8_t axis, uint8_t tool_num, float ref_value);
             float get_manual_pos(uint8_t axis);
@@ -17,7 +18,8 @@ namespace RapidChange {
 
             // magazine settings
             int collet_ = ER11;
-            int direction_ = POSITIVE;
+            int magazine_direction_ = POSITIVE;
+            int z_direction_ = POSITIVE;
             int orientation_ = X_AXIS;
             bool disable_tool_recognition_ = true;
             int probe_ = NONE;
@@ -38,6 +40,7 @@ namespace RapidChange {
             float spindle_start_z_ = NOT_ASSIGNED;
             float tool_recognition_z_ = NOT_ASSIGNED;
             float safe_clearance_z_ = NOT_ASSIGNED;
+            
 
             // touch probe
             float touch_probe_x_pos_ = NOT_ASSIGNED;
@@ -80,6 +83,8 @@ namespace RapidChange {
             float get_touch_probe_pos(uint8_t axis);
             float get_tool_pos(uint8_t axis, uint8_t tool_num);
             bool tool_has_pocket(uint8_t tool_num);
+            bool is_valid_configuration();
+            const char* get_validation_message();
 
             void group(Configuration::HandlerBase& handler) override;
             void afterParse() override;
