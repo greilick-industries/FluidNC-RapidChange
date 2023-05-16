@@ -8,7 +8,7 @@ namespace RapidChange {
     class RapidChange : public Configuration::Configurable {
         private:           
             float pocket_offset_;
-            // const char* validation_message_;
+            // char validation_message_[256];
 
             float calculate_tool_pos(uint8_t axis, uint8_t tool_num, float ref_value);
             float get_manual_pos(uint8_t axis);

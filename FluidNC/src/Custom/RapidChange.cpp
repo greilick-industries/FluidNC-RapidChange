@@ -70,7 +70,7 @@ namespace RapidChange {
     //         || this->pocket_one_y_pos_ == NOT_ASSIGNED
     //         || this-> manual_x_pos_ == NOT_ASSIGNED
     //         || this-> manual_y_pos_ == NOT_ASSIGNED) {
-    //             this->validation_message_ = "XY Coordinates must be configured.";
+    //             strcpy(this->validation_message_, "XY Coordinates must be configured.");
     //             return false;
     //     }
     //     if (this->engage_z_ == NOT_ASSIGNED
@@ -78,7 +78,7 @@ namespace RapidChange {
     //         || this->spindle_start_z_ == NOT_ASSIGNED
     //         || (this->tool_recognition_z_ == NOT_ASSIGNED && this->disable_tool_recognition_ == false)
     //         || this->safe_clearance_z_ == NOT_ASSIGNED) {
-    //             this->validation_message_ = "Z Coordinates must be configured.";
+    //             strcpy(this->validation_message_, "Z Coordinates must be configured.");
     //             return false;
     //     }
     //     if (this->probe_ == TOUCH && 
@@ -88,17 +88,17 @@ namespace RapidChange {
     //         || this->touch_probe_start_z_ == NOT_ASSIGNED
     //         || this->touch_tool_setter_z_ == NOT_ASSIGNED
     //         || this->touch_probe_max_distance_ == NOT_ASSIGNED)) {
-    //             this->validation_message_ = "Touch Probe values must be configured if touch probe is enabled.";
+    //             strcpy(this->validation_message_, "Touch Probe values must be configured if touch probe is enabled.");
     //             return false;
     //     }
     //     if (this->probe_ == INFRARED &&
     //         (this->infrared_probe_start_z_ == NOT_ASSIGNED
     //         || this->infrared_tool_setter_z_ == NOT_ASSIGNED)) {
-    //             this->validation_message_ = "Infrared Probe values must be configured if infrared probe is enabled.";
+    //             strcpy(this->validation_message_, "Infrared Probe values must be configured if infrared probe is enabled.");
     //             return false;
     //     }
     //     if (!(this->disable_tool_recognition_) && this->infrared_pin_.name() == "NO_PIN" && this->probe_ != INFRARED) {
-    //         this->validation_message_ = "Infrared pin must be configured to enable tool recognition without infrared probing.";
+    //         strcpy(this->validation_message_, "Infrared pin must be configured to enable tool recognition without infrared probing.");
     //         return false;
     //     }
 

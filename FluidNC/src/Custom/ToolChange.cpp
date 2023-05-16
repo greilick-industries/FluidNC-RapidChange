@@ -230,6 +230,7 @@ void set_tool_infrared() {
     execute_linef(true, "G38.2 G91 F%d Z%5.3f", rapid_change->infrared_probe_feedrate_, rapid_change->safe_clearance_z_ - rapid_change->tool_recognition_z_);
     execute_linef(false, "G10 L20 P0 Z%5.3f", rapid_change->infrared_tool_setter_z_);
     execute_linef(false, "G90");
+    spin_stop();
 }
 
 void set_tool_touch() {
