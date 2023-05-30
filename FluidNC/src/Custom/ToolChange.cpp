@@ -5,17 +5,22 @@ void user_select_tool(uint8_t new_tool) {
 }
 
 void user_tool_change(uint8_t new_tool) {
-    // if (!rapid_change->is_valid_configuration()) {
-    //     log_info(rapid_change->get_validation_message());
-    //     return;
-    // }
+    rapid_change = config->_rapidChange;
+    char validation_message[256];
+    strcpy(validation_message, rapid_change->get_validation_message());
+    if (validation_message[0] != 'o') {
+        log_info(validation_message);
+        rapid_change = nullptr;
+        return;
+    }
     message_start();
     if (current_tool == new_tool) {
         log_info("Tool change bypassed. Selected tool is the current tool.");
+        rapid_change = nullptr;
         return;
     }
     
-    rapid_change = config->_rapidChange;
+    
     
     protocol_buffer_synchronize(); 
     record_state();
