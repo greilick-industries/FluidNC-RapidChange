@@ -49,6 +49,7 @@ namespace RapidChange {
             float touch_probe_start_z_ = NOT_ASSIGNED;
             float touch_tool_setter_z_ = NOT_ASSIGNED;
             float touch_probe_max_distance_ = NOT_ASSIGNED;
+            int touch_probe_feedrate_initial_ = 300;
             int touch_probe_feedrate_ = 100;
             
             // infrared probe
@@ -60,6 +61,19 @@ namespace RapidChange {
             //Pins
             Pin dust_cover_pin_;
             Pin infrared_pin_;
+
+            // Dust cover control using open axis
+            bool dust_cover_use_axis_ = false;
+            int dust_cover_axis_ = 3;
+            float dust_cover_pos_open_ = NOT_ASSIGNED;
+            float dust_cover_pos_closed_ = NOT_ASSIGNED;
+            int dust_cover_feedrate = 300;
+
+            enum dustCoverAxis {
+                A_AXIS = 3,
+                B_AXIS = 4,
+                C_AXIS = 5
+            };
 
             enum direction {
                 NEGATIVE = 0,
@@ -82,6 +96,7 @@ namespace RapidChange {
             
             float get_touch_probe_pos(uint8_t axis);
             float get_tool_pos(uint8_t axis, uint8_t tool_num);
+            void operate_dust_cover_pin(bool opening);
             bool tool_has_pocket(uint8_t tool_num);
             const char* get_validation_message();
             

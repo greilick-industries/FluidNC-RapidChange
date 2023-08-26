@@ -25,6 +25,13 @@ namespace RapidChange {
         { RapidChange::TOUCH, "TOUCH" },
         EnumItem(RapidChange::NONE)
     };
+    // Dust cover control on open axis
+    EnumItem dustCoverAxes[] = {
+        { RapidChange::A_AXIS, "A_AXIS" },
+        { RapidChange::B_AXIS, "B_AXIS" },
+        { RapidChange::B_AXIS, "C_AXIS" },
+        EnumItem(RapidChange::A_AXIS)
+    };
 
     float RapidChange::calculate_tool_pos(uint8_t axis, uint8_t tool_num, float ref_value) {
         int multiplier = this->magazine_direction_ == POSITIVE ? 1 : -1;
@@ -58,6 +65,12 @@ namespace RapidChange {
             return calculate_tool_pos(axis, tool_num, this->pocket_one_x_pos_);
         } else {
             return calculate_tool_pos(axis, tool_num, this->pocket_one_y_pos_);
+        }
+    }
+
+    void RapidChange::operate_dust_cover_pin(bool opening) {
+        if (this->dust_cover_pin_.defined()) {
+            this->dust_cover_pin_.synchronousWrite(opening);
         }
     }
 
@@ -97,6 +110,12 @@ namespace RapidChange {
             return "Infrared pin must be configured to enable tool recognition without infrared probing.";
         }
 
+        if (this->dust_cover_use_axis_ &&
+            (this->dust_cover_pos_open_ == NOT_ASSIGNED 
+            || this->dust_cover_pos_closed_ == NOT_ASSIGNED)) {
+                return "Dust cover open and closed positions must be assigned to control dust cover with an open axis.";
+        }
+
         // configuration valid if we reached here
         return "ok";
     }
@@ -134,6 +153,7 @@ namespace RapidChange {
         handler.item("engage_feedrate", engage_feedrate_);
         handler.item("infrared_probe_feedrate", infrared_probe_feedrate_);
         handler.item("touch_probe_feedrate", touch_probe_feedrate_);
+        handler.item("touch_probe_feedrate_initial", touch_probe_feedrate_initial_);
 
         handler.item("spin_speed_engage_cw", spin_speed_engage_cw_);
         handler.item("spin_speed_engage_ccw", spin_speed_engage_ccw_);
@@ -142,6 +162,12 @@ namespace RapidChange {
         handler.item("dust_cover_pin", dust_cover_pin_);
         handler.item("infrared_pin", infrared_pin_);
         
+        // Dust cover control on open axis
+        handler.item("dust_cover_use_axis", dust_cover_use_axis_);
+        handler.item("dust_cover_axis", dust_cover_axis_, dustCoverAxes);
+        handler.item("dust_cover_pos_open", dust_cover_pos_open_);
+        handler.item("dust_cover_pos_closed", dust_cover_pos_closed_);
+        handler.item("dust_cover_feedrate", dust_cover_feedrate);
     }
 
     void RapidChange::afterParse() {
@@ -157,6 +183,10 @@ namespace RapidChange {
                 break;
             default:
                 break;
+        }
+        this->dust_cover_pin_.setAttr(Pin::Attr::Output);
+        if (this->infrared_pin_.defined()) {
+          this->infrared_pin_.setAttr(Pin::Attr::Input);
         }
     }
 }
