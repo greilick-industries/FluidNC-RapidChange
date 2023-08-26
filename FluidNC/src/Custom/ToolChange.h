@@ -37,6 +37,7 @@ void go_to_z(float position);
 void go_to_z(float position, int feedrate);
 void message_start();
 void operate_dust_cover(bool open);
+void operate_dust_cover_axis(bool open);
 void get_tool(uint8_t tool_num);
 void set_tool(uint8_t tool_num);
 void set_tool_infrared();

@@ -5,22 +5,24 @@ void user_select_tool(uint8_t new_tool) {
 }
 
 void user_tool_change(uint8_t new_tool) {
-    // if (!rapid_change->is_valid_configuration()) {
-    //     log_info(rapid_change->get_validation_message());
-    //     return;
-    // }
+    rapid_change = config->_rapidChange;
+    char validation_message[256];
+    strcpy(validation_message, rapid_change->get_validation_message());
+    if (validation_message[0] != 'o') {
+        log_info(validation_message);
+        rapid_change = nullptr;
+        return;
+    }
     message_start();
     if (current_tool == new_tool) {
         log_info("Tool change bypassed. Selected tool is the current tool.");
+        rapid_change = nullptr;
         return;
     }
-    
-    rapid_change = config->_rapidChange;
     
     protocol_buffer_synchronize(); 
     record_state();
     set_rapid_change_state();
-    operate_dust_cover(OPEN_DUST_COVER);
     drop_tool();
     get_tool(new_tool);
     set_tool(new_tool);
@@ -80,12 +82,29 @@ void message_start() {
     log_info(tool_msg);
 }
 
-void operate_dust_cover(bool open) {    
-    if (open) {
-        rapid_change->dust_cover_pin_.on();
+void operate_dust_cover(bool state) {
+    if (rapid_change->dust_cover_use_axis_) {
+        operate_dust_cover_axis(state);
     } else {
-        rapid_change->dust_cover_pin_.off();
+        rapid_change->operate_dust_cover_pin(state);
     }
+}
+
+void operate_dust_cover_axis(bool isOpening) {
+    char letter;
+    switch (rapid_change->dust_cover_axis_) {
+        case RapidChange::RapidChange::B_AXIS:
+            letter = 'B';
+            break;
+        case RapidChange::RapidChange::C_AXIS:
+            letter = 'C';
+            break;
+        default:
+            letter = 'A';
+            break;
+    }
+    float position = isOpening ? rapid_change->dust_cover_pos_open_ : rapid_change->dust_cover_pos_closed_;
+    execute_linef(true, "G53 G1 %c%5.3f F%d", letter, position, rapid_change->dust_cover_feedrate);
 }
 
 void record_state() {
@@ -120,6 +139,7 @@ void drop_tool() {
     go_to_z(rapid_change->safe_clearance_z_);
     // if we don't have a tool we're done
     if (current_tool == 0) {
+        operate_dust_cover(OPEN_DUST_COVER);
         return;
     }
     // if the tool has a pocket perform automatic drop
@@ -127,6 +147,8 @@ void drop_tool() {
         uint8_t attempts = 0;
         do {
             go_to_tool_xy(current_tool);
+            operate_dust_cover(OPEN_DUST_COVER);
+            execute_linef(false, "G4 P0.5");
             go_to_z(rapid_change->spindle_start_z_);
             spin_ccw(rapid_change->spin_speed_engage_ccw_);
             go_to_z(rapid_change->engage_z_, rapid_change->engage_feedrate_);
@@ -145,6 +167,7 @@ void drop_tool() {
     
     } else {  // if the tool doesn't have a pocket go to manual position and pause
         go_to_tool_xy(current_tool);
+        operate_dust_cover(OPEN_DUST_COVER);
         log_info("This tool requires manual removal.");
         log_info("Please remove the tool manually and cycle start to continue");
         execute_linef(true, "M0");
@@ -253,7 +276,9 @@ void set_tool_touch() {
     go_to_z(rapid_change->go_to_touch_probe_z_);
     go_to_touch_probe_xy();
     go_to_z(rapid_change->touch_probe_start_z_);
-    execute_linef(true, "G38.2 G91 F%d Z%5.3f", rapid_change->touch_probe_feedrate_, -1 * direction_multiplier * rapid_change->touch_probe_max_distance_);
+    execute_linef(true, "G38.2 G91 F%d Z%5.3f", rapid_change->touch_probe_feedrate_initial_, -1 * direction_multiplier * rapid_change->touch_probe_max_distance_);
+    execute_linef(true, "G91 G0 Z%d", direction_multiplier * 2);
+    execute_linef(true, "G38.2 G91 F%d Z%5.3f", rapid_change->touch_probe_feedrate_, -1 * direction_multiplier * 2.5);
     execute_linef(false, "G10 L20 P0 Z%5.3f", rapid_change->touch_tool_setter_z_);
     execute_linef(false, "G90");
 }

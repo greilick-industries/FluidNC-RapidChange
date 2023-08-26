@@ -25,6 +25,13 @@ namespace RapidChange {
         { RapidChange::TOUCH, "TOUCH" },
         EnumItem(RapidChange::NONE)
     };
+    // Dust cover control on open axis
+    EnumItem dustCoverAxes[] = {
+        { RapidChange::A_AXIS, "A_AXIS" },
+        { RapidChange::B_AXIS, "B_AXIS" },
+        { RapidChange::B_AXIS, "C_AXIS" },
+        EnumItem(RapidChange::A_AXIS)
+    };
 
     float RapidChange::calculate_tool_pos(uint8_t axis, uint8_t tool_num, float ref_value) {
         int multiplier = this->magazine_direction_ == POSITIVE ? 1 : -1;
@@ -61,54 +68,59 @@ namespace RapidChange {
         }
     }
 
+    void RapidChange::operate_dust_cover_pin(bool opening) {
+        if (this->dust_cover_pin_.defined()) {
+            this->dust_cover_pin_.synchronousWrite(opening);
+        }
+    }
+
     bool RapidChange::tool_has_pocket(uint8_t tool_num) {
         return tool_num != 0 && tool_num <= this->pockets_;
     }
 
-    // bool RapidChange::is_valid_configuration() {
-    //     if (this->pocket_one_x_pos_ == NOT_ASSIGNED
-    //         || this->pocket_one_y_pos_ == NOT_ASSIGNED
-    //         || this-> manual_x_pos_ == NOT_ASSIGNED
-    //         || this-> manual_y_pos_ == NOT_ASSIGNED) {
-    //             strcpy(this->validation_message_, "XY Coordinates must be configured.");
-    //             return false;
-    //     }
-    //     if (this->engage_z_ == NOT_ASSIGNED
-    //         || this->back_off_engage_z_ == NOT_ASSIGNED
-    //         || this->spindle_start_z_ == NOT_ASSIGNED
-    //         || (this->tool_recognition_z_ == NOT_ASSIGNED && this->disable_tool_recognition_ == false)
-    //         || this->safe_clearance_z_ == NOT_ASSIGNED) {
-    //             strcpy(this->validation_message_, "Z Coordinates must be configured.");
-    //             return false;
-    //     }
-    //     if (this->probe_ == TOUCH && 
-    //         (this->touch_probe_x_pos_ == NOT_ASSIGNED 
-    //         || this->touch_probe_y_pos_ == NOT_ASSIGNED
-    //         || this->go_to_touch_probe_z_ == NOT_ASSIGNED
-    //         || this->touch_probe_start_z_ == NOT_ASSIGNED
-    //         || this->touch_tool_setter_z_ == NOT_ASSIGNED
-    //         || this->touch_probe_max_distance_ == NOT_ASSIGNED)) {
-    //             strcpy(this->validation_message_, "Touch Probe values must be configured if touch probe is enabled.");
-    //             return false;
-    //     }
-    //     if (this->probe_ == INFRARED &&
-    //         (this->infrared_probe_start_z_ == NOT_ASSIGNED
-    //         || this->infrared_tool_setter_z_ == NOT_ASSIGNED)) {
-    //             strcpy(this->validation_message_, "Infrared Probe values must be configured if infrared probe is enabled.");
-    //             return false;
-    //     }
-    //     if (!(this->disable_tool_recognition_) && this->infrared_pin_.name() == "NO_PIN" && this->probe_ != INFRARED) {
-    //         strcpy(this->validation_message_, "Infrared pin must be configured to enable tool recognition without infrared probing.");
-    //         return false;
-    //     }
+    const char* RapidChange::get_validation_message() {
+        if (this->pocket_one_x_pos_ == NOT_ASSIGNED
+            || this->pocket_one_y_pos_ == NOT_ASSIGNED
+            || this-> manual_x_pos_ == NOT_ASSIGNED
+            || this-> manual_y_pos_ == NOT_ASSIGNED) {
+                return "XY Coordinates must be configured.";
+        }
+        if (this->engage_z_ == NOT_ASSIGNED
+            || this->back_off_engage_z_ == NOT_ASSIGNED
+            || this->spindle_start_z_ == NOT_ASSIGNED
+            || (this->tool_recognition_z_ == NOT_ASSIGNED && this->disable_tool_recognition_ == false)
+            || this->safe_clearance_z_ == NOT_ASSIGNED) {
+                return "Z Coordinates must be configured.";
+        }
+        if (this->probe_ == TOUCH && 
+            (this->touch_probe_x_pos_ == NOT_ASSIGNED 
+            || this->touch_probe_y_pos_ == NOT_ASSIGNED
+            || this->go_to_touch_probe_z_ == NOT_ASSIGNED
+            || this->touch_probe_start_z_ == NOT_ASSIGNED
+            || this->touch_tool_setter_z_ == NOT_ASSIGNED
+            || this->touch_probe_max_distance_ == NOT_ASSIGNED)) {
+                return "Touch Probe values must be configured if touch probe is enabled.";
+        }
+        if (this->probe_ == INFRARED &&
+            (this->infrared_probe_start_z_ == NOT_ASSIGNED
+            || this->infrared_tool_setter_z_ == NOT_ASSIGNED)) {
+                return "Infrared Probe values must be configured if infrared probe is enabled.";
+        }
+        if (!(this->disable_tool_recognition_) && this->infrared_pin_.name() == "NO_PIN" && this->probe_ != INFRARED) {
+            return "Infrared pin must be configured to enable tool recognition without infrared probing.";
+        }
 
-    //     // configuration valid if we reached here
-    //     return true;
-    // }
+        if (this->dust_cover_use_axis_ &&
+            (this->dust_cover_pos_open_ == NOT_ASSIGNED 
+            || this->dust_cover_pos_closed_ == NOT_ASSIGNED)) {
+                return "Dust cover open and closed positions must be assigned to control dust cover with an open axis.";
+        }
 
-    // const char* RapidChange::get_validation_message() {
-    //     return this->validation_message_;
-    // }
+        // configuration valid if we reached here
+        return "ok";
+    }
+
+    
 
     void RapidChange::group(Configuration::HandlerBase& handler) {
         handler.item("collet", collet_, collets);
@@ -141,6 +153,7 @@ namespace RapidChange {
         handler.item("engage_feedrate", engage_feedrate_);
         handler.item("infrared_probe_feedrate", infrared_probe_feedrate_);
         handler.item("touch_probe_feedrate", touch_probe_feedrate_);
+        handler.item("touch_probe_feedrate_initial", touch_probe_feedrate_initial_);
 
         handler.item("spin_speed_engage_cw", spin_speed_engage_cw_);
         handler.item("spin_speed_engage_ccw", spin_speed_engage_ccw_);
@@ -149,6 +162,12 @@ namespace RapidChange {
         handler.item("dust_cover_pin", dust_cover_pin_);
         handler.item("infrared_pin", infrared_pin_);
         
+        // Dust cover control on open axis
+        handler.item("dust_cover_use_axis", dust_cover_use_axis_);
+        handler.item("dust_cover_axis", dust_cover_axis_, dustCoverAxes);
+        handler.item("dust_cover_pos_open", dust_cover_pos_open_);
+        handler.item("dust_cover_pos_closed", dust_cover_pos_closed_);
+        handler.item("dust_cover_feedrate", dust_cover_feedrate);
     }
 
     void RapidChange::afterParse() {
@@ -164,6 +183,10 @@ namespace RapidChange {
                 break;
             default:
                 break;
+        }
+        this->dust_cover_pin_.setAttr(Pin::Attr::Output);
+        if (this->infrared_pin_.defined()) {
+          this->infrared_pin_.setAttr(Pin::Attr::Input);
         }
     }
 }
