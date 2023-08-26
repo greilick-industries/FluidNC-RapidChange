@@ -186,23 +186,27 @@ void get_tool(uint8_t tool_num) {
         go_to_z(rapid_change->engage_z_, rapid_change->engage_feedrate_);
 
         go_to_z(rapid_change->tool_recognition_z_);
+
         if (!rapid_change->disable_tool_recognition_ && !spindle_has_tool()) {
             go_to_z(rapid_change->safe_clearance_z_);
             go_to_tool_xy(0);
+            spin_stop();
             execute_linef(true, "M0");
             log_info("Spindle failed to pick up the selected tool.");
             log_info("Please attach the selected tool and press cycle start to continue.");
+
+        } else {
+            go_to_z(rapid_change->tool_recognition_z_ + 5);
+            if (!rapid_change->disable_tool_recognition_ && spindle_has_tool()) {
+                go_to_z(rapid_change->safe_clearance_z_);
+                go_to_tool_xy(0);
+                spin_stop();
+                execute_linef(true, "M0");
+                log_info("Selected tool did not thread correctly.");
+                log_info("Please remove and reattach the selected tool and press cycle start to continue.");
+            } 
         }
 
-        go_to_z(rapid_change->tool_recognition_z_ + 5);
-        if (!rapid_change->disable_tool_recognition_ && spindle_has_tool()) {
-            go_to_z(rapid_change->safe_clearance_z_);
-            go_to_tool_xy(0);
-            execute_linef(true, "M0");
-            log_info("Selected tool did not thread correctly.");
-            log_info("Please remove and reattach the selected tool and press cycle start to continue.");
-        }
-    
     // if selected tool is not in the magazine go to manual position and pause
     } else {
         go_to_z(rapid_change->safe_clearance_z_);
