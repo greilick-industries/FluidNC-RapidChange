@@ -211,14 +211,15 @@ void get_tool(uint8_t tool_num) {
         go_to_z(rapid_change->tool_recognition_z_);
         execute_linef(true, "G4 P0.25");
 
+
+
         if (!rapid_change->disable_tool_recognition_ && !spindle_has_tool()) {
             go_to_z(rapid_change->safe_clearance_z_);
             go_to_tool_xy(0);
             spin_stop();
-            execute_linef(true, "M0");
             log_info("SPINDLE FAILED TO PICK UP THE SELECTED TOOL.");
             log_info("PLEASE ATTACH THE SELECTED TOOL AND CYCLE START TO CONTINUE.");
-
+            execute_linef(true, "M0");
         } else {
             go_to_z(rapid_change->tool_recognition_z_ + 5);
             execute_linef(true, "G4 P1");
@@ -226,9 +227,9 @@ void get_tool(uint8_t tool_num) {
                 go_to_z(rapid_change->safe_clearance_z_);
                 go_to_tool_xy(0);
                 spin_stop();
-                execute_linef(true, "M0");
                 log_info("SELECTED TOOL DID NOT THREAD CORRECTLY.");
                 log_info("PLEASE REMOVE AND REATTACH THE SELECTED TOOL AND CYCLE START TO CONTINUE.");
+                execute_linef(true, "M0");
             } 
         }
 
@@ -236,9 +237,9 @@ void get_tool(uint8_t tool_num) {
     } else {
         go_to_z(rapid_change->safe_clearance_z_);
         go_to_tool_xy(tool_num);
-        execute_linef(true, "M0");
         log_info("SELECTED TOOL IS NOT IN THE MAGAZINE.");
         log_info("PLEASE ATTACH THE SELECTED TOOL AND PRESS CYCLE START TO CONTINUE.");
+        execute_linef(true, "M0");
     }
     current_tool = tool_num;
 }
@@ -291,7 +292,7 @@ bool spindle_has_tool() {
     } else if (rapid_change->probe_ == RapidChange::RapidChange::probe::INFRARED) {
         return !(config->_probe->get_state()); // If not triggered we have a tool
     } else {
-        return !(rapid_change->infrared_pin_.read());
+        return (rapid_change->infrared_pin_.read());
     }
 }
 
