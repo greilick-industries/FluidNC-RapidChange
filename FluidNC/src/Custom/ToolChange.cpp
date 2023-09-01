@@ -209,6 +209,7 @@ void get_tool(uint8_t tool_num) {
         go_to_z(rapid_change->engage_z_, rapid_change->engage_feedrate_);
 
         go_to_z(rapid_change->tool_recognition_z_);
+        execute_linef(true, "G4 P0.25");
 
         if (!rapid_change->disable_tool_recognition_ && !spindle_has_tool()) {
             go_to_z(rapid_change->safe_clearance_z_);
@@ -220,6 +221,7 @@ void get_tool(uint8_t tool_num) {
 
         } else {
             go_to_z(rapid_change->tool_recognition_z_ + 5);
+            execute_linef(true, "G4 P1");
             if (!rapid_change->disable_tool_recognition_ && spindle_has_tool()) {
                 go_to_z(rapid_change->safe_clearance_z_);
                 go_to_tool_xy(0);
