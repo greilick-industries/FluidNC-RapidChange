@@ -200,7 +200,7 @@ void get_tool(uint8_t tool_num) {
     }
 
     // if selected tool is in the magazine, perform automatic pick up
-    
+
     if (rapid_change->tool_has_pocket(tool_num)) {
         go_to_tool_xy(tool_num);
         go_to_z(rapid_change->spindle_start_z_);
@@ -209,39 +209,26 @@ void get_tool(uint8_t tool_num) {
         go_to_z(rapid_change->back_off_engage_z_);
         go_to_z(rapid_change->engage_z_, rapid_change->engage_feedrate_);
 
-        go_to_z(rapid_change->tool_recognition_z_ + 10);
-        execute_linef(true, "G4 P1");
-        if (!rapid_change->disable_tool_recognition_ && spindle_has_tool()) {
+        go_to_z(rapid_change->tool_recognition_z_);
+
+        if (!rapid_change->disable_tool_recognition_ && !spindle_has_tool()) {
             go_to_z(rapid_change->safe_clearance_z_);
             go_to_tool_xy(0);
             spin_stop();
-            log_info("SELECTED TOOL DID NOT THREAD CORRECTLY.");
-            log_info("PLEASE REMOVE AND REATTACH THE SELECTED TOOL AND CYCLE START TO CONTINUE.");
+            log_info("SPINDLE FAILED TO PICK UP THE SELECTED TOOL.");
+            log_info("PLEASE ATTACH THE SELECTED TOOL AND CYCLE START TO CONTINUE.");
             execute_linef(true, "M0");
+        } else {
+            go_to_z(rapid_change->tool_recognition_z_ + 10);
+            if (!rapid_change->disable_tool_recognition_ && spindle_has_tool()) {
+                go_to_z(rapid_change->safe_clearance_z_);
+                go_to_tool_xy(0);
+                spin_stop();
+                log_info("SELECTED TOOL DID NOT THREAD CORRECTLY.");
+                log_info("PLEASE REMOVE AND REATTACH THE SELECTED TOOL AND CYCLE START TO CONTINUE.");
+                execute_linef(true, "M0");
+            } 
         }
-
-        // go_to_z(rapid_change->tool_recognition_z_);
-        // execute_linef(true, "G4 P0.25");
-
-        // if (!rapid_change->disable_tool_recognition_ && !spindle_has_tool()) {
-        //     go_to_z(rapid_change->safe_clearance_z_);
-        //     go_to_tool_xy(0);
-        //     spin_stop();
-        //     log_info("SPINDLE FAILED TO PICK UP THE SELECTED TOOL.");
-        //     log_info("PLEASE ATTACH THE SELECTED TOOL AND CYCLE START TO CONTINUE.");
-        //     execute_linef(true, "M0");
-        // } else {
-        //     go_to_z(rapid_change->tool_recognition_z_ + 5);
-        //     execute_linef(true, "G4 P1");
-        //     if (!rapid_change->disable_tool_recognition_ && spindle_has_tool()) {
-        //         go_to_z(rapid_change->safe_clearance_z_);
-        //         go_to_tool_xy(0);
-        //         spin_stop();
-        //         log_info("SELECTED TOOL DID NOT THREAD CORRECTLY.");
-        //         log_info("PLEASE REMOVE AND REATTACH THE SELECTED TOOL AND CYCLE START TO CONTINUE.");
-        //         execute_linef(true, "M0");
-        //     } 
-        // }
 
     // if selected tool is not in the magazine go to manual position and pause
     } else {
