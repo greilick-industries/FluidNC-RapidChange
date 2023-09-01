@@ -15,7 +15,7 @@ void user_tool_change(uint8_t new_tool) {
     }
     message_start();
     if (current_tool == new_tool) {
-        log_info("Tool change bypassed. Selected tool is the current tool.");
+        log_info("TOOL CHANGE BYPASSED. SELECTED TOOL IS THE CURRENT TOOL.");
         rapid_change = nullptr;
         return;
     }
@@ -76,9 +76,9 @@ void go_to_z(float position, int feedrate) {
 
 void message_start() {
     char tool_msg[20];
-    sprintf(tool_msg, "Current Tool: %d", current_tool);
+    sprintf(tool_msg, "CURRENT TOOL: %d", current_tool);
     log_info(tool_msg);
-    sprintf(tool_msg, "Selected Tool: %d", gc_state.tool);
+    sprintf(tool_msg, "SELECTED TOOL: %d", gc_state.tool);
     log_info(tool_msg);
 }
 
@@ -160,16 +160,16 @@ void drop_tool() {
         if (spindle_has_tool()) {
             go_to_z(rapid_change->safe_clearance_z_);
             go_to_tool_xy(0);
-            log_info("Tool failed to drop. Execution is paused.");
-            log_info("Please remove the tool manually and cycle start to continue");
+            log_info("TOOL FAILED TO DROP. EXECUTION IS PAUSED.");
+            log_info("PLEASE REMOVE THE TOOL MANUALLY AND CYCLE START TO CONTINUE.");
             execute_linef(true, "M0");
         }           
     
     } else {  // if the tool doesn't have a pocket go to manual position and pause
         go_to_tool_xy(current_tool);
         operate_dust_cover(OPEN_DUST_COVER);
-        log_info("This tool requires manual removal.");
-        log_info("Please remove the tool manually and cycle start to continue");
+        log_info("THIS TOOL REQUIRES MANUAL REMOVAL.");
+        log_info("PLEASE REMOVE THE TOOL MANUALLY AND CYCLE START TO CONTINUE.");
         execute_linef(true, "M0");
     }
     // tool has been removed, set current tool to 0
@@ -215,8 +215,8 @@ void get_tool(uint8_t tool_num) {
             go_to_tool_xy(0);
             spin_stop();
             execute_linef(true, "M0");
-            log_info("Spindle failed to pick up the selected tool.");
-            log_info("Please attach the selected tool and press cycle start to continue.");
+            log_info("SPINDLE FAILED TO PICK UP THE SELECTED TOOL.");
+            log_info("PLEASE ATTACH THE SELECTED TOOL AND CYCLE START TO CONTINUE.");
 
         } else {
             go_to_z(rapid_change->tool_recognition_z_ + 5);
@@ -225,8 +225,8 @@ void get_tool(uint8_t tool_num) {
                 go_to_tool_xy(0);
                 spin_stop();
                 execute_linef(true, "M0");
-                log_info("Selected tool did not thread correctly.");
-                log_info("Please remove and reattach the selected tool and press cycle start to continue.");
+                log_info("SELECTED TOOL DID NOT THREAD CORRECTLY.");
+                log_info("PLEASE REMOVE AND REATTACH THE SELECTED TOOL AND CYCLE START TO CONTINUE.");
             } 
         }
 
@@ -235,8 +235,8 @@ void get_tool(uint8_t tool_num) {
         go_to_z(rapid_change->safe_clearance_z_);
         go_to_tool_xy(tool_num);
         execute_linef(true, "M0");
-        log_info("Selected tool is not in the magazine.");
-        log_info("Please attach the selected tool and press cycle start to continue.");
+        log_info("SELECTED TOOL IS NOT IN THE MAGAZINE.");
+        log_info("PLEASE ATTACH THE SELECTED TOOL AND PRESS CYCLE START TO CONTINUE.");
     }
     current_tool = tool_num;
 }
