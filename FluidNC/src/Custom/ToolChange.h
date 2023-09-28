@@ -5,11 +5,6 @@
 #include "../Settings.h"
 #include <stdarg.h>
 
-#define RC_PREF_NAMESPACE "rapid_change"
-#define CURRENT_TOOL_KEY "c_tool"
-#define OPEN_DUST_COVER true
-#define CLOSE_DUST_COVER false
-
 struct StoredState {
     CoolantState coolant;
     Distance distance;
@@ -31,19 +26,19 @@ void spin_cw(int speed);
 void spin_ccw(int speed);
 void spin_stop();
 void execute_linef(bool sync_after, const char* format, ...);
-void go_to_touch_probe_xy();
-void go_to_tool_xy(uint8_t tool_num);
-void go_to_z(float position);
-void go_to_z(float position, int feedrate);
+void rapid_to_tool_setter_xy();
+void rapid_to_pocket_xy(uint8_t tool_num);
+void rapid_to_z(float position);
+void linear_to_z(float position, int feedrate);
 void message_start();
-void operate_dust_cover(bool open);
-void operate_dust_cover_axis(bool open);
-void get_tool(uint8_t tool_num);
-void set_tool(uint8_t tool_num);
-void set_tool_infrared();
-void set_tool_touch();
-void record_state();
-void restore_state();
-void drop_tool();
-void set_rapid_change_state();
+void open_dust_cover(bool open);
+void open_dust_cover_axis(bool open);
+void open_dust_cover_output(bool open);
+void load_tool(uint8_t tool_num);
+void set_tool();
+void record_program_state();
+void restore_program_state();
+void set_tool_change_state();
+void unload_tool();
+
 bool spindle_has_tool();

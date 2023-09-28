@@ -5,30 +5,22 @@ void user_select_tool(uint8_t new_tool) {
 }
 
 void user_tool_change(uint8_t new_tool) {
-    rapid_change = config->_rapidChange;
-    char validation_message[256];
-    strcpy(validation_message, rapid_change->get_validation_message());
-    if (validation_message[0] != 'o') {
-        log_info(validation_message);
-        rapid_change = nullptr;
-        return;
-    }
-    message_start();
     if (current_tool == new_tool) {
-        log_info("TOOL CHANGE BYPASSED. SELECTED TOOL IS THE CURRENT TOOL.");
-        rapid_change = nullptr;
+        log_info("CURRENT TOOL SELECTED. TOOL CHANGE BYPASSED.");
         return;
     }
-    
+
+    rapid_change = config->_rapidChange;
+
+    message_start();
     protocol_buffer_synchronize(); 
-    record_state();
-    set_rapid_change_state();
-    drop_tool();
-    get_tool(new_tool);
-    set_tool(new_tool);
-    go_to_z(rapid_change->safe_clearance_z_);
-    operate_dust_cover(CLOSE_DUST_COVER);
-    restore_state();
+    record_program_state();
+    set_tool_change_state();
+    unload_tool();
+    load_tool(new_tool);
+    set_tool();
+    open_dust_cover(false);
+    restore_program_state();
         
     rapid_change = nullptr;
 }
@@ -46,32 +38,31 @@ void execute_linef(bool sync_after, const char* format, ...) {
     gc_line[length + 1] = '\0';
     va_end(args);
     
-    report_status_message(
-        execute_line(gc_line, allChannels, WebUI::AuthenticationLevel::LEVEL_GUEST), allChannels);
+    gc_execute_line(gc_line, allChannels);
     
     if (sync_after) {
         protocol_buffer_synchronize();
     }
 }
 
-void go_to_touch_probe_xy() {
+void rapid_to_tool_setter_xy() {
     float x_pos = rapid_change->get_touch_probe_pos(X_AXIS);
     float y_pos = rapid_change->get_touch_probe_pos(Y_AXIS);
     execute_linef(true, "G53 G0 X%5.3f Y%5.3f", x_pos, y_pos);
 }
 
-void go_to_tool_xy(uint8_t tool_num) {
+void rapid_to_pocket_xy(uint8_t tool_num) {
     float x_pos = rapid_change->get_tool_pos(X_AXIS, tool_num);
     float y_pos = rapid_change->get_tool_pos(Y_AXIS, tool_num);
     execute_linef(true, "G53 G0 X%5.3f Y%5.3f", x_pos, y_pos);
 }
 
-void go_to_z(float position) {
+void rapid_to_z(float position) {
     execute_linef(true, "G53 G0 Z%5.3f", position);
 }
 
-void go_to_z(float position, int feedrate) {
-    execute_linef(true, "G53 G1 Z%5.3f F%d", position, feedrate);
+void linear_to_z(float position, int feedrate) {
+    execute_linef(false, "G53 G1 Z%5.3f F%d", position, feedrate);
 }
 
 void message_start() {
@@ -82,17 +73,19 @@ void message_start() {
     log_info(tool_msg);
 }
 
-void operate_dust_cover(bool state) {
-    if (rapid_change->dust_cover_use_axis_) {
-        operate_dust_cover_axis(state);
+void open_dust_cover(bool open) {
+    if (!rapid_change->_dust_cover_enabled) {
+        return;
+    } else if (rapid_change->_dust_cover_use_output) {
+        open_dust_cover_output(open);
     } else {
-        rapid_change->operate_dust_cover_pin(state);
+        open_dust_cover_axis(open);
     }
 }
 
-void operate_dust_cover_axis(bool isOpening) {
+void open_dust_cover_axis(bool open) {
     char letter;
-    switch (rapid_change->dust_cover_axis_) {
+    switch (rapid_change->_dust_cover_axis) {
         case RapidChange::RapidChange::B_AXIS:
             letter = 'B';
             break;
@@ -103,18 +96,24 @@ void operate_dust_cover_axis(bool isOpening) {
             letter = 'A';
             break;
     }
-    float position = isOpening ? rapid_change->dust_cover_pos_open_ : rapid_change->dust_cover_pos_closed_;
-    execute_linef(true, "G53 G1 %c%5.3f F%d", letter, position, rapid_change->dust_cover_feedrate);
+    float position = open ? rapid_change->_dust_cover_open_position : rapid_change->_dust_cover_closed_position;
+    execute_linef(true, "G53 G0 %c%5.3f", letter, position);
 }
 
-void record_state() {
+void open_dust_cover_output(bool open) {
+    if (rapid_change->_dust_cover_pin.defined()) {
+        rapid_change->_dust_cover_pin.synchronousWrite(open);
+    }
+}
+
+void record_program_state() {
     stored_state.coolant = gc_state.modal.coolant;
     stored_state.distance = gc_state.modal.distance;
     stored_state.feed_rate_mode = gc_state.modal.feed_rate;
     stored_state.units = gc_state.modal.units;
 }
 
-void restore_state() {
+void restore_program_state() {
     if (stored_state.coolant.Flood == 1) {
         execute_linef(false, "M8");
     } else if (stored_state.coolant.Mist == 1) {
@@ -131,48 +130,72 @@ void restore_state() {
     }
 }
 
-void set_rapid_change_state() {
+void set_tool_change_state() {
     execute_linef(true, "M5 M9 G0 G21 G90 G94");
 }
 
-void drop_tool() {
-    go_to_z(rapid_change->safe_clearance_z_);
+void unload_tool() {
+    rapid_to_z(rapid_change->_z_safe_clearance);
+
     // if we don't have a tool we're done
     if (current_tool == 0) {
-        operate_dust_cover(OPEN_DUST_COVER);
+        open_dust_cover(true);
         return;
     }
-    // if the tool has a pocket perform automatic drop
+
+    // If the tool has a pocket, unload
     if (rapid_change->tool_has_pocket(current_tool)) {
-        uint8_t attempts = 0;
-        do {
-            go_to_tool_xy(current_tool);
-            operate_dust_cover(OPEN_DUST_COVER);
-            execute_linef(false, "G4 P0.5");
-            go_to_z(rapid_change->spindle_start_z_);
-            spin_ccw(rapid_change->spin_speed_engage_ccw_);
-            go_to_z(rapid_change->engage_z_, rapid_change->engage_feedrate_);
-            go_to_z(rapid_change->tool_recognition_z_);
+
+        // Perform first attempt
+        rapid_to_pocket_xy(current_tool);
+        open_dust_cover(true);
+        execute_linef(false, "G4 P0.5");
+        rapid_to_z(rapid_change->_z_engage + 23);
+        spin_ccw(rapid_change->_unload_rpm);
+        linear_to_z(rapid_change->_z_engage, rapid_change->_engage_feed_rate);
+
+        // If we're using tool recognition, handle it
+        if (rapid_change->_tool_recognition_enabled) {
+            rapid_to_z(rapid_change->_z_tool_recognition_zone_1);
+            
+            // If we have a tool, try unloading one more time
+            if (spindle_has_tool()) {
+                rapid_to_z(rapid_change->_z_engage + 23);
+                linear_to_z(rapid_change->_z_engage, rapid_change->_engage_feed_rate);
+                rapid_to_z(rapid_change->_z_tool_recognition_zone_1);
+            }
+
+            // Whether successful or not, we're done trying
             spin_stop();
-            attempts++;
-        } while (spindle_has_tool() && attempts < 2);
-        // if tool didn't drop after 2 attempts go to manual change position and pause
-        if (spindle_has_tool()) {
-            go_to_z(rapid_change->safe_clearance_z_);
-            go_to_tool_xy(0);
-            log_info("TOOL FAILED TO DROP. EXECUTION IS PAUSED.");
-            log_info("PLEASE REMOVE THE TOOL MANUALLY AND CYCLE START TO CONTINUE.");
-            execute_linef(true, "M0");
-        }           
+
+            // If we have a tool at this point, rise and pause for manual unloading
+
+            if (spindle_has_tool()) {
+                rapid_to_z(rapid_change->_z_safe_clearance);
+                log_info("FAILED TO UNLOAD THE CURRENT TOOL.");
+                log_info("PLEASE UNLOAD THE TOOL MANUALLY AND CYCLE START TO CONTINUE.");
+                execute_linef(true, "M0");
+
+            // Otherwise, get ready to unload
+            } else {
+                rapid_to_z(rapid_change->_z_traverse);
+            }
+
+        // If we're not using tool recognition, go straight to traverse height for loading    
+        } else {
+            rapid_to_z(rapid_change->_z_traverse);
+            spin_stop();
+        }
     
-    } else {  // if the tool doesn't have a pocket go to manual position and pause
-        go_to_tool_xy(current_tool);
-        operate_dust_cover(OPEN_DUST_COVER);
-        log_info("THIS TOOL REQUIRES MANUAL REMOVAL.");
-        log_info("PLEASE REMOVE THE TOOL MANUALLY AND CYCLE START TO CONTINUE.");
+    // If the tool doesn't have a pocket, let's pause for manual removal
+    } else {  
+        open_dust_cover(true);
+        log_info("CURRENT TOOL DOES NOT HAVE AN ASSIGNED POCKET.");
+        log_info("PLEASE UNLOAD THE TOOL MANUALLY AND CYCLE START TO CONTINUE.");
         execute_linef(true, "M0");
     }
-    // tool has been removed, set current tool to 0
+
+    // The tool has been removed, set current tool to 0
     current_tool = 0;
 }
 
@@ -188,109 +211,88 @@ void spin_stop() {
     execute_linef(false, "M5");
 }
 
-void get_tool(uint8_t tool_num) {
-    // sanity check
-    if (current_tool != 0) {
-        report_status_message(Error::GcodeInvalidTarget, allChannels);
-    }
-    // if selected tool is tool 0, set current tool to 0 and we're done
+void load_tool(uint8_t tool_num) {
+
+    // If loading tool 0, we're done
     if (tool_num == 0) {
-        current_tool = tool_num;
         return;
     }
 
-    // if selected tool is in the magazine, perform automatic pick up
-
+    // If selected tool has a pocket, perform automatic pick up
     if (rapid_change->tool_has_pocket(tool_num)) {
-        go_to_tool_xy(tool_num);
-        go_to_z(rapid_change->spindle_start_z_);
-        spin_cw(rapid_change->spin_speed_engage_cw_);
-        go_to_z(rapid_change->engage_z_, rapid_change->engage_feedrate_);
-        go_to_z(rapid_change->back_off_engage_z_);
-        go_to_z(rapid_change->engage_z_, rapid_change->engage_feedrate_);
+        rapid_to_pocket_xy(tool_num);
+        rapid_to_z(rapid_change->_z_engage + 23);
+        spin_cw(rapid_change->_load_rpm);
+        linear_to_z(rapid_change->_z_engage, rapid_change->_engage_feed_rate);
+        rapid_to_z(rapid_change->_z_engage + 12);
+        linear_to_z(rapid_change->_z_engage, rapid_change->_engage_feed_rate);
 
-        go_to_z(rapid_change->tool_recognition_z_);
-
-        if (!rapid_change->disable_tool_recognition_ && !spindle_has_tool()) {
-            go_to_z(rapid_change->safe_clearance_z_);
-            go_to_tool_xy(0);
+        // If we're using tool recognition, let's handle it
+        if (rapid_change->_tool_recognition_enabled) {
+            rapid_to_z(rapid_change->_z_tool_recognition_zone_1);
             spin_stop();
-            log_info("SPINDLE FAILED TO PICK UP THE SELECTED TOOL.");
-            log_info("PLEASE ATTACH THE SELECTED TOOL AND CYCLE START TO CONTINUE.");
-            execute_linef(true, "M0");
-        } else {
-            go_to_z(rapid_change->tool_recognition_z_ + 10);
-            if (!rapid_change->disable_tool_recognition_ && spindle_has_tool()) {
-                go_to_z(rapid_change->safe_clearance_z_);
-                go_to_tool_xy(0);
-                spin_stop();
-                log_info("SELECTED TOOL DID NOT THREAD CORRECTLY.");
-                log_info("PLEASE REMOVE AND REATTACH THE SELECTED TOOL AND CYCLE START TO CONTINUE.");
+
+            // If we don't have a tool rise and pause for a manual load
+            if (!spindle_has_tool()) {
+                rapid_to_z(rapid_change->_z_safe_clearance);
+                log_info("FAILED TO LOAD THE SELECTED TOOL.");
+                log_info("PLEASE LOAD THE TOOL MANUALLY AND CYCLE START TO CONTINUE.");
                 execute_linef(true, "M0");
-            } 
+
+            // Otherwise we have a tool and can perform the next check
+            } else {
+                rapid_to_z(rapid_change->_z_tool_recognition_zone_2);
+
+                // If we show to have a tool here, we cross-threaded and need to manually load
+                if (spindle_has_tool()) {
+                    rapid_to_z(rapid_change->_z_safe_clearance);
+                    log_info("FAILED TO PROPERLY THREAD THE SELECTED TOOL.");
+                    log_info("PLEASE RELOAD THE TOOL MANUALLY AND CYCLE START TO CONTINUE.");
+                    execute_linef(true, "M0");
+                } // Otherwise all went well
+            }
+
+        // Otherwise we're not using tool recognition so let's get ready to set the tool offset
+        } else {
+            rapid_to_z(rapid_change->_z_traverse);
+            spin_stop();
         }
 
-    // if selected tool is not in the magazine go to manual position and pause
+    // Otherwise, there is no pocket so let's rise and pause to load manually
     } else {
-        go_to_z(rapid_change->safe_clearance_z_);
-        go_to_tool_xy(tool_num);
-        log_info("SELECTED TOOL IS NOT IN THE MAGAZINE.");
-        log_info("PLEASE ATTACH THE SELECTED TOOL AND PRESS CYCLE START TO CONTINUE.");
+        rapid_to_z(rapid_change->_z_safe_clearance);
+        log_info("SELECTED TOOL DOES NOT HAVE AN ASSIGNED POCKET.");
+        log_info("PLEASE LOAD THE SELECTED TOOL AND PRESS CYCLE START TO CONTINUE.");
         execute_linef(true, "M0");
     }
+
+    // We've loaded our tool
     current_tool = tool_num;
 }
 
-void set_tool(uint8_t tool_num) {
-    // if selected tool is 0, we're done
-    if (tool_num == 0) {
-        spin_stop();
+void set_tool() {
+    // If the tool setter is disabled or if we don't have a tool, rise up and be done
+    if (!rapid_change->_tool_setter_enabled || current_tool == 0) {
+        rapid_to_z(rapid_change->_z_safe_clearance);
         return;
     }
-    // switch on probe config
-    switch (rapid_change->probe_) {
-        case RapidChange::RapidChange::probe::NONE:
-            spin_stop();
-            return;
-        case RapidChange::RapidChange::probe::INFRARED:
-            set_tool_infrared();
-            return;
-        case RapidChange::RapidChange::probe::TOUCH:
-            set_tool_touch();
-            return;
-        default:
-            return;
-    }
-}
 
-void set_tool_infrared() {
-    execute_linef(true, "G38.2 G91 F%d Z%5.3f", rapid_change->infrared_probe_feedrate_, rapid_change->safe_clearance_z_ - rapid_change->tool_recognition_z_);
-    execute_linef(true, "G10 L20 P0 Z%5.3f", rapid_change->infrared_tool_setter_z_);
-    execute_linef(false, "G90 G0");
-    spin_stop();
-}
+    // Set the tool offset with a double probe, seek then set
+    rapid_to_z(rapid_change->_z_safe_tool_setter);
+    rapid_to_tool_setter_xy();
+    rapid_to_z(rapid_change->_z_seek_start);
+    execute_linef(true, "G38.2 G91 F%d Z%5.3f", rapid_change->_seek_feed_rate, -1 * rapid_change->_set_tool_max_travel);
+    execute_linef(true, "G91 G0 Z%d", rapid_change->_seek_retreat);
+    execute_linef(true, "G38.2 G91 F%d Z%5.3f", rapid_change->_set_feed_rate, -1 * (rapid_change->_seek_retreat + 2));
+    execute_linef(true, "G10 L20 P0 Z%5.3f", rapid_change->_set_tool_offset);
+    execute_linef(true, "G90 G0");
 
-void set_tool_touch() {
-    int direction_multiplier = rapid_change->z_direction_ = RapidChange::RapidChange::direction::POSITIVE ? 1 : -1;
-    spin_stop();
-    go_to_z(rapid_change->go_to_touch_probe_z_);
-    go_to_touch_probe_xy();
-    go_to_z(rapid_change->touch_probe_start_z_);
-    execute_linef(true, "G38.2 G91 F%d Z%5.3f", rapid_change->touch_probe_feedrate_initial_, -1 * direction_multiplier * rapid_change->touch_probe_max_distance_);
-    execute_linef(true, "G91 G0 Z%d", direction_multiplier * 2);
-    execute_linef(true, "G38.2 G91 F%d Z%5.3f", rapid_change->touch_probe_feedrate_, -1 * direction_multiplier * 2.5);
-    execute_linef(true, "G10 L20 P0 Z%5.3f", rapid_change->touch_tool_setter_z_);
-    execute_linef(false, "G90 G0");
+    // And rise all the way because we are done
+    rapid_to_z(rapid_change->_z_safe_clearance);
 }
 
 bool spindle_has_tool() {
-    if (rapid_change->disable_tool_recognition_) {
-        return false;
-    } else if (rapid_change->probe_ == RapidChange::RapidChange::probe::INFRARED) {
-        return !(config->_probe->get_state()); // If not triggered we have a tool
-    } else {
-        return !(rapid_change->infrared_pin_.read());
-    }
+    return !rapid_change->_tool_recognition_pin.read();
 }
 
 void user_M30() {
