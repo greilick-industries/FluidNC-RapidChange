@@ -20,6 +20,11 @@ void user_tool_change(uint8_t new_tool) {
     load_tool(new_tool);
     set_tool();
     open_dust_cover(false);
+
+    if (current_tool != 0) {
+        execute_linef(true, "G53 G0 G90 X%5.3f Y%5.3f", origin_mpos[0], origin_mpos[1]);
+    }
+    
     restore_program_state();
         
     rapid_change = nullptr;
@@ -111,6 +116,10 @@ void record_program_state() {
     stored_state.distance = gc_state.modal.distance;
     stored_state.feed_rate_mode = gc_state.modal.feed_rate;
     stored_state.units = gc_state.modal.units;
+
+    float* current_mpos = get_mpos();
+    origin_mpos[0] = current_mpos[X_AXIS];
+    origin_mpos[1] = current_mpos[Y_AXIS];
 }
 
 void restore_program_state() {
@@ -201,10 +210,12 @@ void unload_tool() {
 
 void spin_cw(int speed) {
     execute_linef(false, "M3 S%d", speed);
+    execute_linef(true, "G4 P1");
 }
 
 void spin_ccw(int speed) {
     execute_linef(false, "M4 S%d", speed);
+    execute_linef(true, "G4 P1");
 }
 
 void spin_stop() {
