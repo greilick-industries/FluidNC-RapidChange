@@ -9,6 +9,10 @@ IntSetting* status_mask;
 
 EnumSetting* message_level;
 
+IntSetting* current_tool;
+
+StringSetting* current_tlo;
+
 enum_opt_t messageLevels = {
     // clang-format off
     { "None", MsgLevelNone },
@@ -53,4 +57,11 @@ void make_settings() {
     status_mask = new IntSetting("What to include in status report", GRBL, WG, "10", "Report/Status", 1, 0, 3, NULL);
 
     build_info = new StringSetting("OEM build info for $I command", EXTENDED, WG, NULL, "Firmware/Build", "", 0, 20, NULL);
+
+    // Tool persistance setting modification
+    current_tool = new IntSetting("Current tool in spindle", EXTENDED, WG, NULL, "Current/Tool", 0, 0, 255, NULL, false);
+
+    // TLO persistance setting modification
+    current_tlo = new StringSetting("Current tool in spindle", EXTENDED, WG, NULL, "Current/Tool", "0", 1, 10, NULL);
 }
+

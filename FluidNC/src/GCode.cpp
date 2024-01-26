@@ -18,6 +18,9 @@
 
 #include "Machine/MachineConfig.h"
 
+// TLO modification
+#include "SettingsDefinitions.h"
+
 #include <string.h>  // memset
 #include <math.h>    // sqrt etc.
 
@@ -47,6 +50,11 @@ void gc_init() {
     gc_state.modal.coord_select = CoordIndex::G54;
     gc_state.modal.override     = config->_start->_deactivateParking ? Override::Disabled : Override::ParkingMotion;
     coords[gc_state.modal.coord_select]->get(gc_state.coord_system);
+    
+    // TLO modifications
+    gc_state.modal.tool_length = ToolLengthOffset::EnableDynamic;
+    gc_state.tool_length_offset = atof(current_tlo->get());
+    gc_state.tool = current_tool->get();
 }
 
 // Sets g-code parser position in mm. Input in steps. Called by the system abort and hard

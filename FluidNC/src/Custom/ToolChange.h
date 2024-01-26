@@ -3,6 +3,7 @@
 #include "../Protocol.h"
 #include "../Serial.h"
 #include "../Settings.h"
+#include "../SettingsDefinitions.h"
 #include <stdarg.h>
 
 struct StoredState {
@@ -18,7 +19,7 @@ enum SpinState {
     STOP = 5
 };
 
-uint8_t current_tool = 0;
+//uint8_t current_tool = 0;
 StoredState stored_state;
 RapidChange::RapidChange* rapid_change;
 float origin_mpos[2];
@@ -36,7 +37,10 @@ void open_dust_cover(bool open);
 void open_dust_cover_axis(bool open);
 void open_dust_cover_output(bool open);
 void load_tool(uint8_t tool_num);
-void set_tool();
+void set_tlo();
+float get_current_tlo();
+Error set_current_tlo(float tlo);
+Error set_current_tool(uint8_t tool_num);
 void record_program_state();
 void restore_program_state();
 void set_tool_change_state();

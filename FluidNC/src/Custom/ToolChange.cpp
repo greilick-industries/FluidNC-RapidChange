@@ -1,11 +1,12 @@
 #include "ToolChange.h"
 
 void user_select_tool(uint8_t new_tool) {
-    current_tool = new_tool;
+    //current_tool = new_tool;
+    set_current_tool(new_tool);
 }
 
 void user_tool_change(uint8_t new_tool) {
-    if (current_tool == new_tool) {
+    if (current_tool->get() == new_tool) {
         log_info("CURRENT TOOL SELECTED. TOOL CHANGE BYPASSED.");
         return;
     }
@@ -18,10 +19,10 @@ void user_tool_change(uint8_t new_tool) {
     set_tool_change_state();
     unload_tool();
     load_tool(new_tool);
-    set_tool();
+    set_tlo();
     open_dust_cover(false);
 
-    if (current_tool != 0) {
+    if (current_tool->get() != 0) {
         execute_linef(true, "G53 G0 G90 X%5.3f Y%5.3f", origin_mpos[0], origin_mpos[1]);
     }
     
@@ -72,7 +73,7 @@ void linear_to_z(float position, int feedrate) {
 
 void message_start() {
     char tool_msg[20];
-    sprintf(tool_msg, "CURRENT TOOL: %d", current_tool);
+    sprintf(tool_msg, "CURRENT TOOL: %d", current_tool->get());
     log_info(tool_msg);
     sprintf(tool_msg, "SELECTED TOOL: %d", gc_state.tool);
     log_info(tool_msg);
@@ -147,16 +148,16 @@ void unload_tool() {
     rapid_to_z(rapid_change->_z_safe_clearance);
 
     // if we don't have a tool we're done
-    if (current_tool == 0) {
+    if (current_tool->get() == 0) {
         open_dust_cover(true);
         return;
     }
 
     // If the tool has a pocket, unload
-    if (rapid_change->tool_has_pocket(current_tool)) {
+    if (rapid_change->tool_has_pocket(current_tool->get())) {
 
         // Perform first attempt
-        rapid_to_pocket_xy(current_tool);
+        rapid_to_pocket_xy(current_tool->get());
         open_dust_cover(true);
         execute_linef(false, "G4 P0.5");
         rapid_to_z(rapid_change->_z_engage + 23);
@@ -205,7 +206,8 @@ void unload_tool() {
     }
 
     // The tool has been removed, set current tool to 0
-    current_tool = 0;
+    //current_tool = 0;
+    set_current_tool(0);
 }
 
 void spin_cw(int speed) {
@@ -278,12 +280,13 @@ void load_tool(uint8_t tool_num) {
     }
 
     // We've loaded our tool
-    current_tool = tool_num;
+    //current_tool = tool_num;
+    set_current_tool(tool_num);
 }
 
-void set_tool() {
+void set_tlo() {
     // If the tool setter is disabled or if we don't have a tool, rise up and be done
-    if (!rapid_change->_tool_setter_enabled || current_tool == 0) {
+    if (!rapid_change->_tool_setter_enabled || current_tool->get() == 0) {
         rapid_to_z(rapid_change->_z_safe_clearance);
         return;
     }
@@ -295,11 +298,46 @@ void set_tool() {
     execute_linef(true, "G38.2 G91 F%d Z%5.3f", rapid_change->_seek_feed_rate, -1 * rapid_change->_set_tool_max_travel);
     execute_linef(true, "G91 G0 Z%d", rapid_change->_seek_retreat);
     execute_linef(true, "G38.2 G91 F%d Z%5.3f", rapid_change->_set_feed_rate, -1 * (rapid_change->_seek_retreat + 2));
-    execute_linef(true, "G10 L20 P0 Z%5.3f", rapid_change->_set_tool_offset);
+    
+    float* m_pos = get_mpos();
+    float m_pos_z = m_pos[Z_AXIS];
+    float tlo = m_pos_z;
+
+    Error err = set_current_tlo(tlo);
+    char message[40];
+    sprintf(message, "Saved/Fetched TLO: %s", current_tlo->get());
+    log_info(message);
+    
+    execute_linef(false, "G43.1 Z%5.3f", tlo);
+    
+    //execute_linef(true, "G10 L20 P0 Z%5.3f", rapid_change->_set_tool_offset);
     execute_linef(true, "G90 G0");
 
     // And rise all the way because we are done
     rapid_to_z(rapid_change->_z_safe_clearance);
+}
+
+float get_current_tlo() {
+    return atof(current_tlo->get());
+}
+
+Error set_current_tlo(float tlo) {
+    char tlo_string[10];
+    sprintf(tlo_string, "%5.3f", tlo);
+    return current_tlo->setStringValue(tlo_string);
+}
+
+Error set_current_tool(uint8_t tool_num) {
+    char tool_string[3];
+    sprintf(tool_string, "%u", tool_num);
+    Error err = current_tool->setStringValue(tool_string);
+    // log_info(errorString(err));
+    // char message[30];
+    // sprintf(message, "Stored current tool: %s", tool_string);
+    // log_info(message);
+    // sprintf(message, "Fetched current tool: %u", current_tool->get());
+    // log_info(message);
+    return err;
 }
 
 bool spindle_has_tool() {
@@ -308,7 +346,7 @@ bool spindle_has_tool() {
 
 void user_M30() {
     // TODO: call user_tool_change? this doesn't work
-    if (current_tool != 0) {
+    if (current_tool->get() != 0) {
         execute_linef(true, "M6 T0");
     }
 }
