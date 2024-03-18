@@ -62,6 +62,6 @@ void make_settings() {
     current_tool = new IntSetting("Current tool in spindle", EXTENDED, WG, NULL, "Current/Tool", 0, 0, 255, NULL, false);
 
     // TLO persistance setting modification
-    current_tlo = new StringSetting("Current tool in spindle", EXTENDED, WG, NULL, "Current/Tool", "0", 1, 10, NULL);
+    current_tlo = new StringSetting("Current tool in spindle", EXTENDED, WG, NULL, "Current/TLO", "0", 1, 10, NULL);
 }
 
